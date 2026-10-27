@@ -88,6 +88,23 @@
     </form>
   </dialog>
 
+  <dialog class="modal detail-modal" id="detail-modal" aria-labelledby="detail-title">
+    <div class="modal-head">
+      <div>
+        <h2 id="detail-title">Raccolto</h2>
+        <p class="sub" id="detail-sub"></p>
+      </div>
+      <button class="icon-btn" type="button" id="detail-close" aria-label="Chiudi"></button>
+    </div>
+    <div class="detail-body" id="detail-body" tabindex="-1" autofocus></div>
+    <div class="form-actions">
+      <button class="button" type="button" id="print-btn"></button>
+    </div>
+  </dialog>
+
+  <!-- copia del riepilogo impaginata per la stampa / PDF (visibile solo in stampa) -->
+  <div class="report" id="report"></div>
+
   <script src="/widgets/config.js"></script>
   <script src="/widgets/common.js"></script>
   <script src="/widgets/charts.js"></script>

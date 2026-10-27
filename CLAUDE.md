@@ -15,6 +15,7 @@
 - Stile: incrocio Apple / smart home — riquadri morbidi, font di sistema/Inter, icone SVG in `ICONS` (common.js). Colori solo come token in `:root` di `style.css`, con varianti scure (media query + `[data-theme=dark]`). Testi in italiano, numeri in formato it-IT.
 - La Home non mostra dati del server: quelli stanno in Impostazioni, dove ogni sezione è una tendina `<details class="group drop">`.
 - Popup: `<dialog class="modal">`; niente `alert/confirm` (conferme a doppio clic).
+- PDF: si genera con `window.print()` da un `<div class="report">` visibile solo in `@media print` (A4, sempre chiaro, classi `rp-*` condivise con il popup); `document.title` diventa il nome del file.
 - Grafici: `charts.js` (`barChart`, `lineChart`), una serie per grafico in `--series-1`, evidenziazione con `--series-muted`, mai doppio asse.
 
 ## Dati

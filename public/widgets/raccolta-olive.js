@@ -144,11 +144,11 @@ function renderCharts(asc, highlight, withYield) {
 function renderRegister(years) {
   $('register').innerHTML = years
     .map((y) => `
-      <section class="group register-year">
-        <div class="row register-head">
+      <section class="group register-year" data-year="${y.year}">
+        <button class="row register-head" type="button" data-open="${y.year}" aria-label="Apri il riepilogo del raccolto ${y.year}">
           <span class="row-label">Raccolto ${y.year}</span>
-          <span class="row-value">${kgFmt(y.kg)} · ${lFmt(y.liters)} · ${pctFmt(y.yield)}</span>
-        </div>
+          <span class="row-value">${kgFmt(y.kg)} · ${lFmt(y.liters)} · ${pctFmt(y.yield)}${icon('chevron')}</span>
+        </button>
         ${y.entries.map((e) => `
           <div class="row entry">
             <div class="entry-main">
@@ -165,6 +165,11 @@ function renderRegister(years) {
 }
 
 $('register').addEventListener('click', async (e) => {
+  // clic sulla sezione (fuori dai pulsanti modifica/elimina) = riepilogo dell'anno
+  if (!e.target.closest('[data-edit], [data-del]')) {
+    const sec = e.target.closest('[data-year]');
+    if (sec) return openDetail(Number(sec.dataset.year));
+  }
   const edit = e.target.closest('[data-edit]');
   if (edit) return openForm(entries.find((x) => x.id === edit.dataset.edit));
   const del = e.target.closest('[data-del]');
@@ -181,6 +186,104 @@ $('register').addEventListener('click', async (e) => {
 });
 
 $('view').addEventListener('change', (e) => { view = e.target.value; render(); });
+
+// --- Riepilogo di un anno: popup + versione per la stampa (PDF) ---
+const fullDate = (t) => new Date(t).toLocaleDateString('it-IT', { day: 'numeric', month: 'long', year: 'numeric' });
+const dash = (n, f) => (n == null ? '—' : f(n));
+
+function reportHTML(y, years, forPrint) {
+  const prev = years[years.indexOf(y) + 1];
+  const list = [...y.entries].sort((a, b) => (a.created || 0) - (b.created || 0)); // ordine cronologico
+  const perL = y.hasCost && y.liters ? y.cost / y.liters : null;
+
+  const head = forPrint
+    ? `<header class="rp-head">
+         <div><p class="rp-kicker">Raccolta olive</p><h1>Raccolto ${y.year}</h1></div>
+         <div class="rp-meta">Pannello · pannello.devicloud.me<br>Generato il ${fullDate(Date.now())}</div>
+       </header>`
+    : '';
+
+  const kpi = (label, value, sub = '') => `<div class="rp-kpi"><span>${label}</span><b>${value}</b><small>${sub}</small></div>`;
+  const kpis = `<div class="rp-kpis">
+      ${kpi('Olive raccolte', kgFmt(y.kg), `${list.length} ${list.length === 1 ? 'inserimento' : 'inserimenti'}`)}
+      ${kpi('Olio prodotto', lFmt(y.liters))}
+      ${kpi('Resa', pctFmt(y.yield), `${nf((y.liters / y.kg) * 100, 1)} L al quintale`)}
+      ${kpi('Costo', y.hasCost ? eurFmt(y.cost) : '—', perL != null ? `${eurFmt(perL)} al litro` : '')}
+    </div>`;
+
+  const rows = list.map((e, i) => `<tr>
+      <td>${i + 1}</td>
+      <td>${e.created ? new Date(e.created).toLocaleDateString('it-IT') : '—'}</td>
+      <td class="num">${kgFmt(e.kg)}</td>
+      <td class="num">${pctFmt(yieldOf(e.kg, e.liters))}</td>
+      <td class="num">${lFmt(e.liters)}</td>
+      <td class="num">${dash(e.cost, eurFmt)}</td>
+      <td class="num">${e.cost != null && e.liters ? eurFmt(e.cost / e.liters) : '—'}</td>
+    </tr>`).join('');
+  const table = `<h3 class="rp-title">Dettaglio inserimenti</h3>
+    <div class="rp-table-wrap"><table class="rp-table">
+      <thead><tr><th>#</th><th>Data</th><th class="num">Olive</th><th class="num">Resa</th><th class="num">Olio</th><th class="num">Costo</th><th class="num">€/L</th></tr></thead>
+      <tbody>${rows}</tbody>
+      <tfoot><tr><td colspan="2">Totale ${y.year}</td><td class="num">${kgFmt(y.kg)}</td><td class="num">${pctFmt(y.yield)}</td><td class="num">${lFmt(y.liters)}</td><td class="num">${y.hasCost ? eurFmt(y.cost) : '—'}</td><td class="num">${dash(perL, eurFmt)}</td></tr></tfoot>
+    </table></div>`;
+
+  // confronto con gli anni precedenti (al massimo 4)
+  const older = years.slice(years.indexOf(y) + 1, years.indexOf(y) + 5);
+  const diff = (cur, old) => {
+    if (!old) return '';
+    const d = ((cur - old) / old) * 100;
+    return `<span class="rp-delta">${d > 0.05 ? '▲' : d < -0.05 ? '▼' : '='} ${nf(Math.abs(d), 0)}%</span>`;
+  };
+  const compare = older.length
+    ? `<h3 class="rp-title">Confronto con gli anni precedenti</h3>
+       <div class="rp-table-wrap"><table class="rp-table">
+         <thead><tr><th>Anno</th><th class="num">Olive</th><th class="num">Olio</th><th class="num">Resa</th><th class="num">Costo</th></tr></thead>
+         <tbody>
+           <tr class="rp-current"><td>${y.year}</td><td class="num">${kgFmt(y.kg)}</td><td class="num">${lFmt(y.liters)}</td><td class="num">${pctFmt(y.yield)}</td><td class="num">${y.hasCost ? eurFmt(y.cost) : '—'}</td></tr>
+           ${older.map((o) => `<tr><td>${o.year}</td><td class="num">${kgFmt(o.kg)} ${diff(y.kg, o.kg)}</td><td class="num">${lFmt(o.liters)} ${diff(y.liters, o.liters)}</td><td class="num">${pctFmt(o.yield)}</td><td class="num">${o.hasCost ? eurFmt(o.cost) : '—'}</td></tr>`).join('')}
+         </tbody>
+       </table></div>
+       <p class="rp-note">Le frecce indicano la variazione del ${y.year} rispetto a ciascun anno.</p>`
+    : '';
+
+  const foot = `<p class="rp-note rp-foot">Resa = kg di olio ogni 100 kg di olive · peso specifico dell'olio ${nf(DENSITY, 3)} kg/L${
+    prev ? '' : ' · primo anno registrato'}</p>`;
+
+  return head + kpis + table + compare + foot;
+}
+
+const detail = $('detail-modal');
+let detailYear = null;
+
+function openDetail(year) {
+  const years = byYear();
+  const y = years.find((x) => x.year === year);
+  if (!y) return;
+  detailYear = year;
+  $('detail-title').textContent = `Raccolto ${y.year}`;
+  $('detail-sub').textContent = `${y.entries.length} ${y.entries.length === 1 ? 'inserimento' : 'inserimenti'} · ${kgFmt(y.kg)} di olive`;
+  $('detail-body').innerHTML = reportHTML(y, years, false);
+  detail.showModal();
+}
+
+function printReport() {
+  const years = byYear();
+  const y = years.find((x) => x.year === detailYear);
+  if (!y) return;
+  $('report').innerHTML = reportHTML(y, years, true);
+  // il titolo diventa il nome proposto per il file PDF
+  const title = document.title;
+  document.title = `Raccolto ${y.year} – Raccolta olive`;
+  detail.close();
+  window.print();
+  document.title = title;
+}
+
+$('detail-close').innerHTML = icon('close');
+$('detail-close').addEventListener('click', () => detail.close());
+detail.addEventListener('click', (e) => { if (e.target === detail) detail.close(); });
+$('print-btn').innerHTML = `${icon('printer')}Stampa PDF`;
+$('print-btn').addEventListener('click', printReport);
 
 // --- Popup «Nuovo raccolto» ---
 const modal = $('form-modal');

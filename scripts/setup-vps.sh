@@ -53,6 +53,17 @@ server {
     # test di velocità: blocchi di upload fino a 32 MB (il default di nginx è 1 MB)
     client_max_body_size 32m;
 
+    # WebSocket del test di velocità: connessioni separate, senza buffer
+    location /api/rete/ws {
+        proxy_pass http://127.0.0.1:$PORT;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade \$http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_set_header Host \$host;
+        proxy_buffering off;
+        proxy_read_timeout 60s;
+    }
+
     location / {
         proxy_pass http://127.0.0.1:$PORT;
         proxy_set_header Host \$host;

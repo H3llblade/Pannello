@@ -108,8 +108,11 @@ async function network() {
 }
 network();
 
-// Test di velocità verso la VPS, sul modello degli speedtest: più flussi in parallelo,
+// Test di velocità verso la VPS, sul modello degli speedtest: più connessioni in parallelo,
 // durata a tempo, e i primi istanti (avvio delle connessioni) esclusi dal calcolo.
+// Metodo principale: WebSocket (ognuno è una connessione TCP separata, come fa Speedtest).
+// Ripiego: fetch, che con HTTP/2 condivide un'unica connessione e quindi misura di meno.
+const WS_STREAMS = 6;
 const STREAMS = 4;
 const TEST_MS = 8000;
 const WARMUP_MS = 2000;
@@ -131,6 +134,59 @@ function rateMeter() {
       return ms > 0 ? (bytes * 8) / (ms / 1000) / 1e6 : 0;
     },
   };
+}
+
+const wsUrl = (dir) => `${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.host}/api/rete/ws?dir=${dir}&${Math.random()}`;
+
+// apre n WebSocket; rifiuta se non si aprono entro 4 secondi (es. proxy senza WebSocket)
+function openSockets(dir, n) {
+  return Promise.all(Array.from({ length: n }, () => new Promise((ok, ko) => {
+    const ws = new WebSocket(wsUrl(dir));
+    ws.binaryType = 'arraybuffer';
+    const t = setTimeout(() => { ws.close(); ko(new Error('WebSocket non disponibile')); }, 4000);
+    ws.onopen = () => { clearTimeout(t); ok(ws); };
+    ws.onerror = () => { clearTimeout(t); ko(new Error('WebSocket non disponibile')); };
+  })));
+}
+
+async function wsDownload(show) {
+  const socks = await openSockets('down', WS_STREAMS);
+  const m = rateMeter();
+  socks.forEach((ws) => (ws.onmessage = (e) => m.add(e.data.byteLength)));
+  const live = setInterval(() => show(m.mbps()), 300);
+  await new Promise((r) => setTimeout(r, TEST_MS));
+  clearInterval(live);
+  const result = m.mbps();
+  socks.forEach((ws) => ws.close());
+  return result;
+}
+
+async function wsUpload(show) {
+  const socks = await openSockets('up', WS_STREAMS);
+  const chunk = new Uint8Array(64 * 1024);
+  for (let i = 0; i < chunk.length; i += 65536) crypto.getRandomValues(chunk.subarray(i, i + 65536));
+  // il server comunica quanti byte ha ricevuto: contano solo quelli
+  const got = socks.map(() => 0);
+  socks.forEach((ws, i) => (ws.onmessage = (e) => (got[i] = Number(e.data))));
+  const total = () => got.reduce((a, b) => a + b, 0);
+  const t0 = performance.now();
+  let warm = null;
+  const rate = () => {
+    if (!warm) return 0;
+    const ms = performance.now() - warm.t;
+    return ms > 0 ? ((total() - warm.bytes) * 8) / (ms / 1000) / 1e6 : 0;
+  };
+  // tiene pieno il buffer di invio di ogni socket
+  const feed = setInterval(() => {
+    for (const ws of socks) while (ws.readyState === 1 && ws.bufferedAmount < 2 * 1024 * 1024) ws.send(chunk);
+    if (!warm && performance.now() - t0 >= WARMUP_MS) warm = { t: performance.now(), bytes: total() };
+    show(rate());
+  }, 20);
+  await new Promise((r) => setTimeout(r, TEST_MS));
+  clearInterval(feed);
+  const result = rate();
+  socks.forEach((ws) => ws.close());
+  return result;
 }
 
 async function measureDownload(show) {
@@ -204,12 +260,18 @@ async function speedTest() {
     pings.sort((a, b) => a - b);
     $('sp-ping').textContent = Math.round(pings[Math.floor(pings.length / 2)]); // mediana
 
+    const showDown = (v) => ($('sp-down').textContent = fmt1(v));
+    const showUp = (v) => ($('sp-up').textContent = fmt1(v));
+    let useWs = true;
     $('sp-note').textContent = 'Misuro il download (8 secondi)…';
-    $('sp-down').textContent = fmt1(await measureDownload((v) => ($('sp-down').textContent = fmt1(v))));
+    let down;
+    try { down = await wsDownload(showDown); } catch { useWs = false; down = await measureDownload(showDown); }
+    showDown(down);
 
     $('sp-note').textContent = "Misuro l'upload (8 secondi)…";
-    $('sp-up').textContent = fmt1(await measureUpload((v) => ($('sp-up').textContent = fmt1(v))));
-    $('sp-note').textContent = `Test verso il server del pannello completato alle ${new Date().toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })}.`;
+    showUp(useWs ? await wsUpload(showUp) : await measureUpload(showUp));
+    const at = new Date().toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
+    $('sp-note').textContent = `Test verso il server del pannello completato alle ${at}${useWs ? '' : ' (metodo semplificato: i valori possono essere più bassi)'}.`;
   } catch (e) {
     $('sp-note').textContent = `Test non riuscito (${e.message || 'il server non risponde'}).`;
   } finally {

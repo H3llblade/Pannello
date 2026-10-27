@@ -128,4 +128,7 @@ const server = http.createServer((req, res) => {
   });
 });
 
+// WebSocket (solo per il test di velocità)
+server.on('upgrade', (req, socket) => rete.upgrade(req, socket));
+
 server.listen(PORT, HOST, () => console.log(`Pannello in ascolto su http://${HOST}:${PORT}`));

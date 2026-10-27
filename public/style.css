@@ -355,8 +355,33 @@ nav a.active { background: var(--surface-2); color: var(--text); }
   box-shadow: 0 1px 3px rgba(0, 0, 0, .12);
 }
 
+/* Sezioni a tendina */
+.drop summary {
+  list-style: none;
+  cursor: pointer;
+  user-select: none;
+  min-height: 60px;
+}
+.drop summary::-webkit-details-marker { display: none; }
+.drop summary .row-label { font-weight: 600; }
+.drop summary::after {
+  content: '';
+  width: 8px;
+  height: 8px;
+  margin: 0 4px 3px 0;
+  border-right: 2px solid var(--text-3);
+  border-bottom: 2px solid var(--text-3);
+  transform: rotate(45deg);
+  transition: transform .25s;
+}
+.drop summary .row-value { margin-left: auto; }
+.drop[open] summary::after { transform: rotate(-135deg); margin-bottom: -3px; }
+.drop summary:hover { background: var(--surface-2); }
+.drop-body { border-top: 1px solid var(--border); animation: open .25s ease; }
+@keyframes open { from { opacity: 0; transform: translateY(-4px); } }
+
 .meter-row { padding: 14px 16px; }
-.meter-row + .meter-row { border-top: 1px solid var(--border); }
+.meter-row, .row + .meter-row { border-top: 1px solid var(--border); }
 .meter-head {
   display: flex;
   justify-content: space-between;

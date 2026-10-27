@@ -18,44 +18,47 @@
       <h1>Impostazioni</h1>
     </div>
 
-    <h2 class="group-title">Aspetto</h2>
-    <section class="group">
-      <div class="row">
-        <span class="row-label">Tema</span>
-        <div class="segmented" id="theme-seg" role="radiogroup" aria-label="Tema">
-          <button type="button" data-mode="light">Chiaro</button>
-          <button type="button" data-mode="dark">Scuro</button>
-          <button type="button" data-mode="auto">Automatico</button>
+    <details class="group drop">
+      <summary class="row">
+        <span class="row-label"><span class="dot-icon sm" style="--c:#5e5ce6" id="look-icon"></span>Aspetto</span>
+        <span class="row-value" id="theme-summary">—</span>
+      </summary>
+      <div class="drop-body">
+        <div class="row">
+          <span class="row-label">Tema</span>
+          <div class="segmented" id="theme-seg" role="radiogroup" aria-label="Tema">
+            <button type="button" data-mode="light">Chiaro</button>
+            <button type="button" data-mode="dark">Scuro</button>
+            <button type="button" data-mode="auto">Automatico</button>
+          </div>
         </div>
       </div>
-    </section>
+    </details>
 
-    <h2 class="group-title">Server</h2>
-    <section class="group">
-      <div class="row">
-        <span class="row-label"><span class="dot-icon sm" style="--c:#34c759" id="srv-icon"></span>Stato</span>
+    <details class="group drop">
+      <summary class="row">
+        <span class="row-label"><span class="dot-icon sm" style="--c:#34c759" id="srv-icon"></span>Server</span>
         <span class="row-value" id="srv-status">—</span>
+      </summary>
+      <div class="drop-body">
+        <div class="row"><span class="row-label">Nome host</span><span class="row-value" id="host">—</span></div>
+        <div class="row"><span class="row-label">Sistema</span><span class="row-value" id="platform">—</span></div>
+        <div class="row"><span class="row-label">Attivo da</span><span class="row-value" id="uptime">—</span></div>
+        <div class="row"><span class="row-label">Carico medio</span><span class="row-value" id="load">—</span></div>
+        <div class="meter-row">
+          <div class="meter-head"><span>CPU</span><span id="cpu-val">—</span></div>
+          <div class="meter"><i id="cpu-bar"></i></div>
+        </div>
+        <div class="meter-row">
+          <div class="meter-head"><span>Memoria</span><span id="mem-val">—</span></div>
+          <div class="meter"><i id="mem-bar"></i></div>
+        </div>
+        <div class="meter-row">
+          <div class="meter-head"><span>Disco</span><span id="disk-val">—</span></div>
+          <div class="meter"><i id="disk-bar"></i></div>
+        </div>
       </div>
-      <div class="row"><span class="row-label">Nome host</span><span class="row-value" id="host">—</span></div>
-      <div class="row"><span class="row-label">Sistema</span><span class="row-value" id="platform">—</span></div>
-      <div class="row"><span class="row-label">Attivo da</span><span class="row-value" id="uptime">—</span></div>
-      <div class="row"><span class="row-label">Carico medio</span><span class="row-value" id="load">—</span></div>
-    </section>
-
-    <section class="group">
-      <div class="meter-row">
-        <div class="meter-head"><span>CPU</span><span id="cpu-val">—</span></div>
-        <div class="meter"><i id="cpu-bar"></i></div>
-      </div>
-      <div class="meter-row">
-        <div class="meter-head"><span>Memoria</span><span id="mem-val">—</span></div>
-        <div class="meter"><i id="mem-bar"></i></div>
-      </div>
-      <div class="meter-row">
-        <div class="meter-head"><span>Disco</span><span id="disk-val">—</span></div>
-        <div class="meter"><i id="disk-bar"></i></div>
-      </div>
-    </section>
+    </details>
   </main>
 
   <script src="/common.js"></script>

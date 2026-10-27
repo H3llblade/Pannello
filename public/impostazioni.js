@@ -2,10 +2,13 @@
 const $ = (id) => document.getElementById(id);
 
 // --- Tema ---
+const THEME_NAMES = { light: 'Chiaro', dark: 'Scuro', auto: 'Automatico' };
 const seg = $('theme-seg');
+$('look-icon').innerHTML = icon('sun');
 function paintSeg() {
   const mode = themeMode();
   seg.querySelectorAll('button').forEach((b) => b.setAttribute('aria-checked', b.dataset.mode === mode));
+  $('theme-summary').textContent = THEME_NAMES[mode];
 }
 seg.addEventListener('click', (e) => {
   const b = e.target.closest('button');
@@ -34,7 +37,8 @@ function meter(name, pct, text) {
 async function stats() {
   try {
     const s = await (await fetch('/api/stats')).json();
-    $('srv-status').textContent = 'Online';
+    // il Codespace non è la VPS: lo segnalo per non confondere i dati
+    $('srv-status').textContent = s.hostname.startsWith('codespaces-') ? 'Online · anteprima locale' : 'Online';
     $('srv-status').className = 'row-value ok';
     $('host').textContent = s.hostname;
     $('platform').textContent = s.platform;

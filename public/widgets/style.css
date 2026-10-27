@@ -434,6 +434,32 @@ nav a.active { background: var(--surface-2); color: var(--text); }
   box-shadow: 0 1px 3px rgba(0, 0, 0, .12);
 }
 
+/* Collegamento account Bosch */
+.link-box { padding: 16px; border-top: 1px solid var(--border); display: flex; flex-direction: column; gap: 14px; }
+.link-reason { margin: 0; font-weight: 600; }
+.steps { margin: 0; padding-left: 20px; color: var(--text-2); display: flex; flex-direction: column; gap: 6px; line-height: 1.45; }
+.steps b { color: var(--text); font-weight: 600; }
+.steps code, .steps kbd {
+  padding: 1px 6px;
+  border-radius: 6px;
+  background: var(--surface-2);
+  color: var(--text);
+  font: 500 13px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+.link-actions { display: flex; gap: 10px; }
+.link-box .field input { font-size: 14px; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+.button.sm { padding: 7px 14px; font-size: 14px; }
+.button.armed { background: var(--bad); color: #fff; }
+
+/* Test di velocità */
+.speed { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; padding: 14px 16px; border-top: 1px solid var(--border); }
+.speed-item { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 14px 8px; border-radius: 14px; background: var(--surface-2); }
+.speed-item span { font-size: 13px; font-weight: 600; color: var(--text-2); }
+.speed-item b { font-size: 26px; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+.speed-item small { font-size: 12px; color: var(--text-2); }
+.row-note { color: var(--text-2); font-size: 14px; flex: 1; }
+.speed + .row { border-top: 1px solid var(--border); }
+
 /* Sezioni a tendina */
 .drop summary {
   list-style: none;

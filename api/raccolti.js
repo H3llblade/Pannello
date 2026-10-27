@@ -3,6 +3,7 @@
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
+const readBody = require('./body');
 
 const DATA_DIR = path.join(__dirname, '..', 'data');
 const FILE = path.join(DATA_DIR, 'raccolti.json');
@@ -17,22 +18,6 @@ function save(list) {
   const tmp = FILE + '.tmp';
   fs.writeFileSync(tmp, JSON.stringify(list, null, 2));
   fs.renameSync(tmp, FILE);
-}
-
-function readBody(req, limit = 32 * 1024) {
-  return new Promise((resolve, reject) => {
-    let size = 0;
-    const chunks = [];
-    req.on('data', (c) => {
-      size += c.length;
-      if (size > limit) { reject(new Error('Richiesta troppo grande')); req.destroy(); }
-      else chunks.push(c);
-    });
-    req.on('end', () => {
-      try { resolve(JSON.parse(Buffer.concat(chunks).toString() || '{}')); }
-      catch { reject(new Error('JSON non valido')); }
-    });
-  });
 }
 
 // Controlla e normalizza i campi; lancia un errore con messaggio in italiano

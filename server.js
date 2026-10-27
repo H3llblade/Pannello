@@ -2,13 +2,15 @@
 //   /                -> public/pages/index.html
 //   /<nome>          -> public/pages/<nome>.html
 //   /widgets/<file>  -> public/widgets/<file>  (css e js del browser)
-//   /api/...         -> moduli in api/
+//   /api/...         -> moduli in api/ (stats, termostato, raccolti, rete)
 const http = require('http');
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
 const termostato = require('./api/termostato');
 const raccolti = require('./api/raccolti');
+const rete = require('./api/rete');
+const readBody = require('./api/body');
 
 const PORT = Number(process.env.PORT) || 3000;
 const HOST = process.env.HOST || '127.0.0.1';
@@ -74,17 +76,32 @@ function send(res, code, body, type = 'text/plain; charset=utf-8') {
   res.end(body);
 }
 
+// Termostato: lettura + collegamento dell'account Bosch (login fatto a mano una volta)
+function termostatoApi(req, res, url) {
+  const json = (code, d) => send(res, code, JSON.stringify(d), MIME['.json']);
+  const p = url.pathname;
+  if (p === '/api/termostato' && req.method === 'GET') return termostato.termostato().then((d) => json(200, d));
+  if (req.method !== 'POST') return json(405, { error: 'Metodo non permesso' });
+  if (p === '/api/termostato/login') return json(200, { url: termostato.startLogin() });
+  if (p === '/api/termostato/scollega') return termostato.unlink(), json(200, { ok: true });
+  if (p === '/api/termostato/collega') {
+    return readBody(req)
+      .then((b) => termostato.finishLogin(b.url))
+      .then(() => json(200, { ok: true }))
+      .catch((e) => json(400, { error: e.message }));
+  }
+  json(404, { error: 'Non trovato' });
+}
+
 const server = http.createServer((req, res) => {
   const url = new URL(req.url, 'http://localhost');
 
   if (url.pathname === '/api/stats') {
     return send(res, 200, JSON.stringify(stats()), MIME['.json']);
   }
-  if (url.pathname === '/api/termostato') {
-    termostato().then((d) => send(res, 200, JSON.stringify(d), MIME['.json']));
-    return;
-  }
+  if (url.pathname.startsWith('/api/termostato')) return termostatoApi(req, res, url);
   if (raccolti(req, res, url, send)) return;
+  if (rete(req, res, url, send)) return;
 
   let rel;
   try { rel = decodeURIComponent(url.pathname); } catch { return send(res, 400, 'Bad request'); }

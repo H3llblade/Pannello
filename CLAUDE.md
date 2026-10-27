@@ -22,7 +22,9 @@
 ## Dati
 - Meteo: Galluzzo, Firenze (`config.js`); popup con mappa Windy.
 - Raccolta olive: `/api/raccolti` (GET/POST, PUT/DELETE `/:id`), campi `{year, kg, cost, yieldPct, liters}`. Inserimenti dello stesso anno si sommano; anni dal più recente. Resa % = litri × `oilDensity` (0,916 kg/L) ÷ kg × 100. **Nessuna password** per scrivere: scelta esplicita dell'utente.
-- Termostato Bosch: `api/termostato.js` (cache 60 s) → `/api/termostato` `{connected, indoor, target, heating, updated}`. Da collegare al cloud Bosch quando l'utente dice quale app usa; credenziali in `.env`.
+- Termostato Bosch EasyControl: `api/termostato.js` usa il cloud Pointt (`pointt-api.bosch-thermotechnology.com`) con OAuth SingleKey ID + PKCE (client dell'app Bosch). Il login ha un captcha: l'utente lo fa una volta da Impostazioni → Termostato e incolla l'URL `com.bosch.rrc://…?code=`. Refresh token (monouso, ruota) e deviceId in `data/bosch.json`. Lettura (cache 60 s): `zones/zn1/temperatureActual`, `temperatureHeatingSetpoint`, `zones/list` (status), `heatingCircuits/hc1/powerSetpoint` (>0 = acceso), umidità `system/sensors/humidity/indoor_h1`. API: GET `/api/termostato`, POST `/login`, `/collega {url}`, `/scollega`.
+- Connessione Starlink: `api/rete.js` — la VPS non può raggiungere l'antenna di casa, quindi mostra la rete del dispositivo che guarda (IP via `X-Real-IP` di nginx, provider da ip-api.com, Starlink = AS14593) e un test latenza/download/upload verso la VPS (`/api/rete`, `/ping`, `/download?mb=`, `/upload`).
+- `api/body.js`: lettura del corpo JSON condivisa.
 
 ## Flusso
 - **Dopo ogni modifica fai sempre commit e push su `origin/main`** (messaggi in italiano). L'utente pubblica lanciando `./deploy` **sulla VPS** in `~/Pannello` (`./deploy --setup` se cambia `scripts/setup-vps.sh`).

@@ -45,11 +45,59 @@
         <span class="row-value" id="th-status">—</span>
       </summary>
       <div class="drop-body">
-        <div class="row"><span class="row-label">Marca</span><span class="row-value">Bosch (cloud)</span></div>
-        <div class="row"><span class="row-label">Temperatura interna</span><span class="row-value" id="th-indoor">—</span></div>
-        <div class="row"><span class="row-label">Temperatura impostata</span><span class="row-value" id="th-target">—</span></div>
-        <div class="row"><span class="row-label">Riscaldamento</span><span class="row-value" id="th-heating">—</span></div>
-        <div class="row"><span class="row-label">Ultimo aggiornamento</span><span class="row-value" id="th-updated">—</span></div>
+        <div class="row"><span class="row-label">Modello</span><span class="row-value">Bosch EasyControl</span></div>
+        <div id="th-data">
+          <div class="row"><span class="row-label">Temperatura interna</span><span class="row-value" id="th-indoor">—</span></div>
+          <div class="row"><span class="row-label">Temperatura impostata</span><span class="row-value" id="th-target">—</span></div>
+          <div class="row"><span class="row-label">Umidità interna</span><span class="row-value" id="th-hum">—</span></div>
+          <div class="row"><span class="row-label">Riscaldamento</span><span class="row-value" id="th-heating">—</span></div>
+          <div class="row"><span class="row-label">Ultimo aggiornamento</span><span class="row-value" id="th-updated">—</span></div>
+          <div class="row"><span class="row-label">Account Bosch</span><button class="button ghost sm" type="button" id="th-unlink">Scollega</button></div>
+        </div>
+
+        <!-- collegamento account: login SingleKey ID fatto a mano una volta -->
+        <div class="link-box" id="th-link" hidden>
+          <p class="link-reason" id="th-reason"></p>
+          <ol class="steps">
+            <li>Da un <b>computer</b> con Chrome o Edge premi <b>«Apri login Bosch»</b>: si apre una nuova scheda.</li>
+            <li>In quella scheda premi <kbd>F12</kbd> e apri la sezione <b>Rete</b> (Network).</li>
+            <li>Accedi con l'email e la password dell'app <b>EasyControl</b> (account SingleKey ID).</li>
+            <li>Dopo l'accesso la pagina sembra bloccarsi: è normale. In <b>Rete</b> cerca la riga che inizia con <code>com.bosch.rrc://</code> (spesso in rosso), tasto destro → <b>Copia</b> → <b>Copia URL</b>.</li>
+            <li>Incolla l'indirizzo qui sotto e premi <b>Collega</b>.</li>
+          </ol>
+          <div class="link-actions">
+            <button class="button" type="button" id="th-open"></button>
+          </div>
+          <label class="field">
+            <span>Indirizzo copiato</span>
+            <input id="th-url" type="text" placeholder="com.bosch.rrc://app/oidc_redirect?code=…" autocomplete="off" spellcheck="false">
+          </label>
+          <p class="form-error" id="th-error" hidden></p>
+          <div class="link-actions">
+            <button class="button" type="button" id="th-connect">Collega</button>
+          </div>
+        </div>
+      </div>
+    </details>
+
+    <details class="group drop">
+      <summary class="row">
+        <span class="row-label"><span class="dot-icon sm" style="--c:#30b0c7" id="net-icon"></span>Connessione Starlink</span>
+        <span class="row-value" id="net-status">—</span>
+      </summary>
+      <div class="drop-body">
+        <div class="row"><span class="row-label">Rete di questo dispositivo</span><span class="row-value" id="net-isp">—</span></div>
+        <div class="row"><span class="row-label">IP pubblico</span><span class="row-value" id="net-ip">—</span></div>
+        <div class="row"><span class="row-label">Località rilevata</span><span class="row-value" id="net-city">—</span></div>
+        <div class="speed">
+          <div class="speed-item"><span>Latenza</span><b id="sp-ping">—</b><small>ms</small></div>
+          <div class="speed-item"><span>Download</span><b id="sp-down">—</b><small>Mbps</small></div>
+          <div class="speed-item"><span>Upload</span><b id="sp-up">—</b><small>Mbps</small></div>
+        </div>
+        <div class="row">
+          <span class="row-note" id="sp-note">Misura il collegamento tra questo dispositivo e il pannello.</span>
+          <button class="button sm" type="button" id="sp-run">Avvia test</button>
+        </div>
       </div>
     </details>
 

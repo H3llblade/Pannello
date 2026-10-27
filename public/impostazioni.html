@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Pannello · Impostazioni</title>
+  <script src="/theme.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <header class="topbar" id="topbar"></header>
+
+  <main class="page narrow">
+    <div class="page-head">
+      <h1>Impostazioni</h1>
+    </div>
+
+    <h2 class="group-title">Aspetto</h2>
+    <section class="group">
+      <div class="row">
+        <span class="row-label">Tema</span>
+        <div class="segmented" id="theme-seg" role="radiogroup" aria-label="Tema">
+          <button type="button" data-mode="light">Chiaro</button>
+          <button type="button" data-mode="dark">Scuro</button>
+          <button type="button" data-mode="auto">Automatico</button>
+        </div>
+      </div>
+    </section>
+
+    <h2 class="group-title">Server</h2>
+    <section class="group">
+      <div class="row">
+        <span class="row-label"><span class="dot-icon sm" style="--c:#34c759" id="srv-icon"></span>Stato</span>
+        <span class="row-value" id="srv-status">—</span>
+      </div>
+      <div class="row"><span class="row-label">Nome host</span><span class="row-value" id="host">—</span></div>
+      <div class="row"><span class="row-label">Sistema</span><span class="row-value" id="platform">—</span></div>
+      <div class="row"><span class="row-label">Attivo da</span><span class="row-value" id="uptime">—</span></div>
+      <div class="row"><span class="row-label">Carico medio</span><span class="row-value" id="load">—</span></div>
+    </section>
+
+    <section class="group">
+      <div class="meter-row">
+        <div class="meter-head"><span>CPU</span><span id="cpu-val">—</span></div>
+        <div class="meter"><i id="cpu-bar"></i></div>
+      </div>
+      <div class="meter-row">
+        <div class="meter-head"><span>Memoria</span><span id="mem-val">—</span></div>
+        <div class="meter"><i id="mem-bar"></i></div>
+      </div>
+      <div class="meter-row">
+        <div class="meter-head"><span>Disco</span><span id="disk-val">—</span></div>
+        <div class="meter"><i id="disk-bar"></i></div>
+      </div>
+    </section>
+  </main>
+
+  <script src="/common.js"></script>
+  <script src="/impostazioni.js"></script>
+</body>
+</html>

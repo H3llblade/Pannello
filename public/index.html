@@ -4,67 +4,56 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Pannello · Home</title>
+  <script src="/theme.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&family=Rajdhani:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/style.css">
 </head>
 <body>
-  <div class="grid-bg" aria-hidden="true"></div>
+  <header class="topbar" id="topbar"></header>
 
-  <header class="topbar">
-    <a class="brand" href="/"><span class="brand-dot"></span>PANNELLO</a>
-    <nav>
-      <a href="/" class="active">Home</a>
-    </nav>
-    <div class="status"><span class="pulse"></span><span id="conn">ONLINE</span></div>
-  </header>
+  <main class="page">
+    <div class="page-head">
+      <h1 id="greeting">Benvenuto</h1>
+      <p class="sub" id="date"></p>
+    </div>
 
-  <main class="dashboard">
-    <section class="card hero">
-      <p class="label" id="greeting">Benvenuto</p>
-      <h1 id="clock">--:--</h1>
-      <p class="date" id="date"></p>
-    </section>
+    <div class="tiles">
+      <section class="tile wide clock-tile">
+        <span class="tile-label">Ora</span>
+        <div class="clock" id="clock">--:--</div>
+        <span class="tile-foot" id="seconds"></span>
+      </section>
 
-    <section class="card weather">
-      <p class="label">Meteo · <span id="city">—</span></p>
-      <div class="weather-main">
-        <span class="weather-icon" id="w-icon">◌</span>
-        <span class="big" id="w-temp">--°</span>
-      </div>
-      <p class="muted" id="w-desc">Caricamento…</p>
-      <div class="kv">
-        <span>Umidità</span><b id="w-hum">--</b>
-        <span>Vento</span><b id="w-wind">--</b>
-      </div>
-    </section>
+      <section class="tile wide weather-tile" id="weather">
+        <div class="weather-top">
+          <div>
+            <span class="tile-label" id="city">—</span>
+            <div class="temp" id="w-temp">--°</div>
+          </div>
+          <div class="weather-icon" id="w-icon"></div>
+        </div>
+        <div class="weather-bottom">
+          <span id="w-desc">Caricamento…</span>
+          <span class="chips">
+            <span class="chip" id="w-hum"></span>
+            <span class="chip" id="w-wind"></span>
+          </span>
+        </div>
+      </section>
 
-    <section class="card system">
-      <p class="label">Server · <span id="host">—</span></p>
-      <div class="gauges">
-        <div class="gauge" id="g-cpu"><svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="42"/><circle class="bar" cx="50" cy="50" r="42"/></svg><b>--</b><span>CPU</span></div>
-        <div class="gauge" id="g-mem"><svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="42"/><circle class="bar" cx="50" cy="50" r="42"/></svg><b>--</b><span>RAM</span></div>
-        <div class="gauge" id="g-disk"><svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="42"/><circle class="bar" cx="50" cy="50" r="42"/></svg><b>--</b><span>Disco</span></div>
-      </div>
-      <div class="kv">
-        <span>Uptime</span><b id="uptime">--</b>
-        <span>Load</span><b id="load">--</b>
-      </div>
-    </section>
+      <div class="tiles-links" id="links"></div>
 
-    <section class="card links">
-      <p class="label">Scorciatoie</p>
-      <div class="link-grid" id="links"></div>
-    </section>
-
-    <section class="card notes">
-      <p class="label">Note rapide</p>
-      <textarea id="notes" placeholder="Scrivi qui… (salvate su questo dispositivo)"></textarea>
-    </section>
+      <section class="tile wide notes-tile">
+        <span class="tile-label"><span class="dot-icon" style="--c:#ff9f0a" id="notes-icon"></span>Note</span>
+        <textarea id="notes" placeholder="Scrivi qualcosa… (salvato su questo dispositivo)"></textarea>
+      </section>
+    </div>
   </main>
 
   <script src="/config.js"></script>
+  <script src="/common.js"></script>
   <script src="/app.js"></script>
 </body>
 </html>

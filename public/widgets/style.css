@@ -446,6 +446,9 @@ nav a.active { background: var(--surface-2); color: var(--text); }
   color: var(--text);
   font: 500 13px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 }
+.steps-alt { margin: 0; font-size: 13px; color: var(--text-2); line-height: 1.45; }
+.steps-alt b { color: var(--text); font-weight: 600; }
+.steps-alt code { padding: 1px 6px; border-radius: 6px; background: var(--surface-2); color: var(--text); font: 500 12px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
 .link-actions { display: flex; gap: 10px; }
 .link-box .field input { font-size: 14px; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
 .button.sm { padding: 7px 14px; font-size: 14px; }

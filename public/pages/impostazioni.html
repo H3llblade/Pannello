@@ -60,11 +60,12 @@
           <p class="link-reason" id="th-reason"></p>
           <ol class="steps">
             <li>Da un <b>computer</b> con Chrome o Edge premi <b>«Apri login Bosch»</b>: si apre una nuova scheda.</li>
-            <li>In quella scheda premi <kbd>F12</kbd> e apri la sezione <b>Rete</b> (Network).</li>
             <li>Accedi con l'email e la password dell'app <b>EasyControl</b> (account SingleKey ID).</li>
-            <li>Dopo l'accesso la pagina sembra bloccarsi: è normale. In <b>Rete</b> cerca la riga che inizia con <code>com.bosch.rrc://</code> (spesso in rosso), tasto destro → <b>Copia</b> → <b>Copia URL</b>.</li>
-            <li>Incolla l'indirizzo qui sotto e premi <b>Collega</b>.</li>
+            <li>Dopo l'accesso la pagina resta bianca o sembra bloccata: è normale. Premi <kbd>F12</kbd> e apri <b>Console</b>.</li>
+            <li>C'è un errore rosso <i>Failed to launch '<code>com.bosch.rrc://…</code>'</i>: copia l'indirizzo tra apici, da <code>com.bosch.rrc://</code> fino alla fine.</li>
+            <li>Incollalo qui sotto e premi <b>Collega</b> (il codice scade dopo pochi minuti).</li>
           </ol>
+          <p class="steps-alt">Se in Console non c'è: in <b>Network</b> spunta <b>Keep log</b>, filtra per <code>bosch.rrc</code>, ricarica la pagina e rifai l'accesso; poi tasto destro sulla riga → <b>Copy URL</b>.</p>
           <div class="link-actions">
             <button class="button" type="button" id="th-open"></button>
           </div>

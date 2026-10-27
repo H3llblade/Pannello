@@ -98,7 +98,9 @@ function startLogin() {
 async function finishLogin(pasted) {
   const { pending } = load();
   if (!pending) throw new Error('Premi prima «Apri login Bosch»');
-  const text = String(pasted || '').trim();
+  // accetta l'URL, il solo codice o l'intero messaggio di errore della Console
+  const raw = String(pasted || '').trim();
+  const text = (raw.match(/com\.bosch\.rrc:\/\/[^\s'"]+/) || [raw])[0];
   const query = text.includes('?') ? text.slice(text.indexOf('?') + 1) : text;
   const params = new URLSearchParams(query);
   const code = params.get('code') || (/^[\w-]+$/.test(text) ? text : null);

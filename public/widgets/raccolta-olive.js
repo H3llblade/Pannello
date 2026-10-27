@@ -41,12 +41,23 @@ function byYear() {
   return years;
 }
 
+// --- Avviso in cima alla pagina (errori di rete o del server) ---
+let errTimer;
+function pageError(msg) {
+  $('page-error').textContent = msg;
+  $('page-error').hidden = false;
+  clearTimeout(errTimer);
+  errTimer = setTimeout(() => ($('page-error').hidden = true), 6000);
+}
+
 // --- Caricamento ---
 async function load() {
   try {
-    entries = await (await fetch('/api/raccolti')).json();
+    const res = await fetch('/api/raccolti');
+    if (!res.ok) throw new Error();
+    entries = await res.json();
   } catch {
-    entries = [];
+    pageError('Impossibile caricare i raccolti: il server non risponde.');
   }
   render();
 }
@@ -181,7 +192,13 @@ $('register').addEventListener('click', async (e) => {
     setTimeout(() => { if (del.isConnected) { del.classList.remove('armed'); del.innerHTML = icon('trash'); } }, 3000);
     return;
   }
-  await fetch(`/api/raccolti/${del.dataset.del}`, { method: 'DELETE' });
+  try {
+    const res = await fetch(`/api/raccolti/${del.dataset.del}`, { method: 'DELETE' });
+    if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error);
+  } catch (err) {
+    // TypeError = rete/server irraggiungibile; altrimenti è il messaggio del server
+    pageError(`Eliminazione non riuscita: ${err instanceof TypeError || !err.message ? 'il server non risponde' : err.message}.`);
+  }
   load();
 });
 

@@ -674,6 +674,7 @@ nav a.active { background: var(--surface-2); color: var(--text); }
 .input-unit i { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); font-style: normal; color: var(--text-2); font-weight: 600; pointer-events: none; }
 .field.note { grid-column: 1 / -1; font-weight: 500; font-size: 13px; }
 .form-error { margin: 0; padding: 10px 14px; border-radius: 12px; background: color-mix(in srgb, var(--bad) 12%, transparent); color: var(--bad); font-weight: 500; }
+.page-error { margin-bottom: 16px; }
 .form-actions { display: flex; justify-content: flex-end; gap: 10px; }
 
 /* ---------- 404 ---------- */

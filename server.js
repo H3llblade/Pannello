@@ -2,13 +2,14 @@
 //   /                -> public/pages/index.html
 //   /<nome>          -> public/pages/<nome>.html
 //   /widgets/<file>  -> public/widgets/<file>  (css e js del browser)
-//   /api/...         -> moduli in api/ (stats, termostato, raccolti, rete)
+//   /api/...         -> moduli in api/ (stats, termostato, raccolti, veicoli, rete)
 const http = require('http');
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
 const termostato = require('./api/termostato');
 const raccolti = require('./api/raccolti');
+const veicoli = require('./api/veicoli');
 const rete = require('./api/rete');
 const readBody = require('./api/body');
 
@@ -101,6 +102,7 @@ const server = http.createServer((req, res) => {
   }
   if (url.pathname.startsWith('/api/termostato')) return termostatoApi(req, res, url);
   if (raccolti(req, res, url, send)) return;
+  if (veicoli(req, res, url, send)) return;
   if (rete(req, res, url, send)) return;
 
   let rel;

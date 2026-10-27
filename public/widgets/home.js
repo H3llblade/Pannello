@@ -108,9 +108,26 @@ $('sections').innerHTML = cfg.sections
     <a class="tile section-tile" href="${x.href}">
       <span class="dot-icon" style="--c:${x.color}">${icon(x.icon)}</span>
       <span class="section-name">${x.name}</span>
+      <span class="section-sub" data-sub="${x.href}"></span>
       <span class="section-go">${icon('chevron')}</span>
     </a>`)
   .join('');
+
+// sotto «Veicoli»: scadenze scadute o in arrivo
+async function vehiclesSummary() {
+  const el = document.querySelector('[data-sub="/veicoli"]');
+  if (!el) return;
+  try {
+    const list = await (await fetch('/api/veicoli')).json();
+    if (!list.length) return (el.textContent = 'Nessun veicolo inserito');
+    const { bad, warn } = dueSummary(list);
+    el.className = 'section-sub ' + (bad ? 'due-bad' : warn ? 'due-warn' : 'due-ok');
+    el.innerHTML = bad || warn
+      ? `${icon(bad ? 'alert' : 'clock')}${[bad && `${bad} scadut${bad === 1 ? 'a' : 'e'}`, warn && `${warn} in arrivo`].filter(Boolean).join(' · ')}`
+      : `${icon('check')}Tutto in regola`;
+  } catch {}
+}
+vehiclesSummary();
 
 // --- Note (localStorage) ---
 $('notes-icon').innerHTML = icon('pencil');

@@ -319,6 +319,10 @@ nav a.active { background: var(--surface-2); color: var(--text); }
 .section-tile:hover { transform: translateY(-3px); box-shadow: var(--shadow-hover); }
 .section-tile:active { transform: scale(.98); }
 .section-name { margin-top: auto; font-weight: 700; font-size: 22px; letter-spacing: -0.02em; }
+.section-sub { display: inline-flex; align-items: center; gap: 5px; align-self: flex-start; margin-top: 4px; font-size: 13px; font-weight: 600; color: var(--text-2); }
+.section-sub.due-ok, .section-sub.due-warn, .section-sub.due-bad { padding: 2px 10px; border-radius: 999px; }
+.section-sub:empty { display: none; }
+.section-sub .icon { font-size: 12px; }
 .section-go {
   position: absolute;
   right: 20px;
@@ -332,7 +336,11 @@ nav a.active { background: var(--surface-2); color: var(--text); }
   color: var(--text-2);
   transition: transform .25s, color .25s;
 }
-.section-tile:hover .section-go { transform: translateX(3px); color: var(--text); }
+.section-tile:hover .section-sub { display: inline-flex; align-items: center; gap: 5px; align-self: flex-start; margin-top: 4px; font-size: 13px; font-weight: 600; color: var(--text-2); }
+.section-sub.due-ok, .section-sub.due-warn, .section-sub.due-bad { padding: 2px 10px; border-radius: 999px; }
+.section-sub:empty { display: none; }
+.section-sub .icon { font-size: 12px; }
+.section-go { transform: translateX(3px); color: var(--text); }
 
 /* Note */
 .tile.notes-tile { grid-column: 1 / -1; }
@@ -668,8 +676,96 @@ nav a.active { background: var(--surface-2); color: var(--text); }
 .entry-data { font-size: 14px; color: var(--text-2); font-variant-numeric: tabular-nums; }
 .entry-actions { display: flex; gap: 6px; }
 
+/* ---------- Veicoli ---------- */
+.vehicles { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px; }
+.vehicle {
+  min-height: 0;
+  gap: 4px;
+  align-items: stretch;
+  width: 100%;
+  text-align: left;
+  font: inherit;
+  color: var(--text);
+  cursor: pointer;
+  transition: transform .25s cubic-bezier(.2, .8, .2, 1), box-shadow .25s;
+}
+.vehicle:hover { transform: translateY(-3px); box-shadow: var(--shadow-hover); }
+.vehicle:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+.vehicle-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+.vehicle-name { font-size: 22px; font-weight: 700; letter-spacing: -0.02em; }
+.vehicle-sub { color: var(--text-2); font-size: 14px; }
+.vehicle-dues { display: flex; flex-direction: column; gap: 8px; margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--border); }
+.vehicle-due { display: flex; justify-content: space-between; align-items: center; gap: 10px; font-size: 14px; }
+.vehicle-due > span:first-child { color: var(--text-2); font-weight: 500; }
+
+/* Targa in stile europeo */
+.plate {
+  display: inline-flex;
+  align-items: stretch;
+  height: 28px;
+  border: 1.5px solid #1c1c1e;
+  border-radius: 5px;
+  background: #fff;
+  color: #111;
+  overflow: hidden;
+  vertical-align: middle;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, .15);
+}
+.plate i { display: grid; place-items: center; width: 18px; background: #003399; color: #fff; font: 700 11px/1 system-ui, sans-serif; font-style: normal; }
+.plate b { display: grid; place-items: center; padding: 0 8px; font: 700 15px/1 ui-monospace, 'SF Mono', Menlo, Consolas, monospace; letter-spacing: .06em; }
+.card-head .sub .plate { margin-left: 6px; transform: scale(.9); transform-origin: left center; }
+
+/* Stato delle scadenze: colore + icona + testo */
+.due {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+.due .icon { font-size: 12px; }
+.due-ok { background: color-mix(in srgb, var(--ok) 14%, transparent); color: color-mix(in srgb, var(--ok) 70%, var(--text)); }
+.due-warn { background: color-mix(in srgb, var(--warn) 18%, transparent); color: color-mix(in srgb, var(--warn) 65%, var(--text)); }
+.due-bad { background: color-mix(in srgb, var(--bad) 15%, transparent); color: var(--bad); }
+.due-none { background: var(--surface-2); color: var(--text-2); font-weight: 500; }
+
+.due-list { margin-bottom: 20px; }
+.due-row { width: 100%; border: 0; background: transparent; color: var(--text); font: inherit; text-align: left; cursor: pointer; }
+.due-row:hover { background: var(--surface-2); }
+.due-row + .due-row, .register-head + div .due-row:first-child { border-top: 1px solid var(--border); }
+
+.card-head { display: flex; align-items: center; gap: 14px; }
+.group.flat { box-shadow: none; margin-bottom: 0; }
+.card-notes { margin: 0; white-space: pre-wrap; color: var(--text-2); }
+.rp-table td.wrap { white-space: normal; min-width: 140px; color: var(--text-2); }
+.form-actions.spread { justify-content: space-between; flex-wrap: wrap; }
+.button.danger-text { color: var(--bad); }
+
 /* Popup modulo */
 .form-modal { width: min(560px, calc(100% - 32px)); }
+.form-modal.wide { width: min(720px, calc(100% - 32px)); }
+.form-scroll { overflow-y: auto; max-height: min(62vh, 640px); margin: 0 -4px; padding: 0 4px; }
+.form-section { margin: 18px 0 10px; font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--text-2); }
+.form-section:first-child { margin-top: 0; }
+.field.full { grid-column: 1 / -1; }
+.field textarea, .field .select select { width: 100%; }
+.field textarea {
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface-2);
+  color: var(--text);
+  font: inherit;
+  resize: vertical;
+  outline: none;
+}
+.field textarea:focus { border-color: var(--accent); }
+.select.block { display: block; }
+.field .select select { box-shadow: none; background: var(--surface-2); font-weight: 500; padding: 12px 40px 12px 14px; font-size: 16px; }
 .form-modal form { display: flex; flex-direction: column; gap: 18px; }
 .fields { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
 .field { display: flex; flex-direction: column; gap: 6px; font-size: 14px; font-weight: 600; color: var(--text-2); }
@@ -753,4 +849,6 @@ nav a.active { background: var(--surface-2); color: var(--text); }
   .stat-value { font-size: 24px; }
   .fields { grid-template-columns: 1fr; }
   .rp-kpis { grid-template-columns: 1fr 1fr; }
+  .vehicles { grid-template-columns: 1fr; }
+  .due { white-space: normal; }
 }

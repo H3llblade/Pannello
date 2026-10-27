@@ -19,17 +19,159 @@
 
   <main class="page">
     <div class="page-head">
-      <h1>Veicoli</h1>
+      <div class="head-row">
+        <h1>Veicoli</h1>
+        <button class="button" type="button" id="new-btn"></button>
+      </div>
     </div>
 
-    <section class="tile placeholder">
-      <span class="dot-icon" style="--c:#0a84ff" id="page-icon"></span>
-      <h2>Pagina pronta</h2>
-      <p>Qui andranno i contenuti di Veicoli.</p>
+    <p class="form-error page-error" id="page-error" role="alert" hidden></p>
+
+    <section class="tile placeholder" id="empty" hidden>
+      <span class="dot-icon" style="--c:#0a84ff" id="empty-icon"></span>
+      <h2>Ancora nessun veicolo</h2>
+      <p>Premi «Nuovo veicolo» per creare la prima scheda.</p>
     </section>
+
+    <div id="content" hidden>
+      <section class="group due-list" id="due-box" hidden>
+        <div class="row register-head"><span class="row-label">Prossime scadenze</span><span class="row-value" id="due-count"></span></div>
+        <div id="due-rows"></div>
+      </section>
+      <div class="vehicles" id="vehicles"></div>
+    </div>
   </main>
 
+  <!-- Scheda del veicolo -->
+  <dialog class="modal detail-modal" id="card-modal" aria-labelledby="card-title">
+    <div class="modal-head">
+      <div class="card-head">
+        <span class="dot-icon" id="card-icon"></span>
+        <div>
+          <h2 id="card-title">Veicolo</h2>
+          <p class="sub" id="card-sub"></p>
+        </div>
+      </div>
+      <button class="icon-btn" type="button" id="card-close" aria-label="Chiudi"></button>
+    </div>
+    <div class="detail-body" id="card-body" tabindex="-1" autofocus></div>
+    <div class="form-actions spread">
+      <button class="button ghost danger-text" type="button" id="card-delete">Elimina veicolo</button>
+      <div class="form-actions">
+        <button class="button ghost" type="button" id="card-job"></button>
+        <button class="button" type="button" id="card-edit">Modifica</button>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- Nuovo / modifica veicolo -->
+  <dialog class="modal form-modal wide" id="form-modal" aria-labelledby="form-title">
+    <form id="form" novalidate>
+      <div class="modal-head">
+        <div>
+          <h2 id="form-title">Nuovo veicolo</h2>
+          <p class="sub">Solo il nome è obbligatorio: il resto puoi aggiungerlo dopo</p>
+        </div>
+        <button class="icon-btn" type="button" id="form-close" aria-label="Chiudi"></button>
+      </div>
+
+      <div class="form-scroll">
+        <h3 class="form-section">Veicolo</h3>
+        <div class="fields">
+          <label class="field"><span>Nome</span><input name="name" type="text" maxlength="40" placeholder="es. Panda di casa" required></label>
+          <label class="field"><span>Tipo</span>
+            <span class="select block"><select name="type">
+              <option value="auto">Auto</option><option value="moto">Moto / scooter</option><option value="furgone">Furgone</option>
+              <option value="camper">Camper</option><option value="trattore">Trattore / mezzo agricolo</option><option value="altro">Altro</option>
+            </select></span>
+          </label>
+          <label class="field"><span>Targa</span><input name="plate" type="text" maxlength="12" placeholder="AB123CD" autocapitalize="characters"></label>
+          <label class="field"><span>Marca</span><input name="brand" type="text" maxlength="40" placeholder="es. Fiat"></label>
+          <label class="field"><span>Modello</span><input name="model" type="text" maxlength="40" placeholder="es. Panda 4x4"></label>
+          <label class="field"><span>Anno di immatricolazione</span><input name="year" type="number" inputmode="numeric" min="1900" max="2100"></label>
+          <label class="field"><span>Alimentazione</span>
+            <span class="select block"><select name="fuel">
+              <option value="">—</option><option value="benzina">Benzina</option><option value="diesel">Diesel</option><option value="gpl">GPL</option>
+              <option value="metano">Metano</option><option value="ibrida">Ibrida</option><option value="elettrica">Elettrica</option><option value="altro">Altro</option>
+            </select></span>
+          </label>
+          <label class="field"><span>Chilometri attuali</span><span class="input-unit"><input name="km" type="text" inputmode="numeric" placeholder="0"><i>km</i></span></label>
+          <label class="field"><span>Intestatario</span><input name="owner" type="text" maxlength="60"></label>
+          <label class="field"><span>Numero di telaio</span><input name="vin" type="text" maxlength="17" autocapitalize="characters"></label>
+          <label class="field"><span>Gomme montate</span>
+            <span class="select block"><select name="tires">
+              <option value="">—</option><option value="estive">Estive</option><option value="invernali">Invernali</option><option value="4stagioni">4 stagioni</option>
+            </select></span>
+          </label>
+        </div>
+
+        <h3 class="form-section">Scadenze</h3>
+        <div class="fields">
+          <label class="field"><span>Scadenza revisione</span><input name="revisione" type="date"></label>
+          <label class="field"><span>Scadenza bollo</span><input name="bollo" type="date"></label>
+        </div>
+
+        <h3 class="form-section">Assicurazione</h3>
+        <div class="fields">
+          <label class="field"><span>Compagnia</span><input name="insCompany" type="text" maxlength="60"></label>
+          <label class="field"><span>Numero polizza</span><input name="insPolicy" type="text" maxlength="40"></label>
+          <label class="field"><span>Scadenza</span><input name="insExpiry" type="date"></label>
+          <label class="field"><span>Costo annuo</span><span class="input-unit"><input name="insCost" type="text" inputmode="decimal" placeholder="0"><i>€</i></span></label>
+        </div>
+
+        <h3 class="form-section">Tagliando</h3>
+        <div class="fields">
+          <label class="field"><span>Ultimo tagliando</span><input name="lastServiceDate" type="date"></label>
+          <label class="field"><span>Km all'ultimo tagliando</span><span class="input-unit"><input name="lastServiceKm" type="text" inputmode="numeric"><i>km</i></span></label>
+          <label class="field"><span>Ogni quanti km</span><span class="input-unit"><input name="serviceKm" type="text" inputmode="numeric" placeholder="15000"><i>km</i></span></label>
+          <label class="field"><span>Ogni quanti mesi</span><span class="input-unit"><input name="serviceMonths" type="text" inputmode="numeric" placeholder="12"><i>mesi</i></span></label>
+        </div>
+
+        <h3 class="form-section">Note</h3>
+        <label class="field full"><textarea name="notes" rows="3" maxlength="1000" placeholder="Officina di fiducia, misure gomme, codice radio…"></textarea></label>
+      </div>
+
+      <p class="form-error" id="form-error" hidden></p>
+      <div class="form-actions">
+        <button class="button ghost" type="button" id="form-cancel">Annulla</button>
+        <button class="button" type="submit" id="form-submit">Salva</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Nuovo intervento -->
+  <dialog class="modal form-modal" id="job-modal" aria-labelledby="job-title">
+    <form id="job-form" novalidate>
+      <div class="modal-head">
+        <div>
+          <h2 id="job-title">Nuovo intervento</h2>
+          <p class="sub" id="job-sub"></p>
+        </div>
+        <button class="icon-btn" type="button" id="job-close" aria-label="Chiudi"></button>
+      </div>
+      <div class="fields">
+        <label class="field"><span>Tipo</span>
+          <span class="select block"><select name="type">
+            <option value="tagliando">Tagliando</option><option value="revisione">Revisione</option><option value="gomme">Gomme</option>
+            <option value="riparazione">Riparazione</option><option value="carrozzeria">Carrozzeria</option><option value="altro">Altro</option>
+          </select></span>
+        </label>
+        <label class="field"><span>Data</span><input name="date" type="date" required></label>
+        <label class="field"><span>Chilometri</span><span class="input-unit"><input name="km" type="text" inputmode="numeric"><i>km</i></span></label>
+        <label class="field"><span>Costo</span><span class="input-unit"><input name="cost" type="text" inputmode="decimal" placeholder="0"><i>€</i></span></label>
+        <label class="field full"><span>Note</span><input name="notes" type="text" maxlength="300" placeholder="es. olio, filtri, pastiglie anteriori"></label>
+        <p class="field note full" id="job-hint"></p>
+      </div>
+      <p class="form-error" id="job-error" hidden></p>
+      <div class="form-actions">
+        <button class="button ghost" type="button" id="job-cancel">Annulla</button>
+        <button class="button" type="submit" id="job-submit">Salva</button>
+      </div>
+    </form>
+  </dialog>
+
   <script src="/widgets/common.js"></script>
-  <script>document.getElementById('page-icon').innerHTML = icon('car');</script>
+  <script src="/widgets/scadenze.js"></script>
+  <script src="/widgets/veicoli.js"></script>
 </body>
 </html>

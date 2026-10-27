@@ -1,24 +1,8 @@
 // Raccolta olive: archivio degli inserimenti in data/raccolti.json (fuori da git).
 // Lettura e scrittura libere: per scelta dell'utente non c'è password.
-const fs = require('fs');
-const path = require('path');
 const crypto = require('crypto');
 const readBody = require('./body');
-
-const DATA_DIR = path.join(__dirname, '..', 'data');
-const FILE = path.join(DATA_DIR, 'raccolti.json');
-
-function load() {
-  try { return JSON.parse(fs.readFileSync(FILE, 'utf8')); } catch { return []; }
-}
-
-// Scrittura atomica: file temporaneo e poi rename, così un crash non lascia il JSON a metà
-function save(list) {
-  fs.mkdirSync(DATA_DIR, { recursive: true });
-  const tmp = FILE + '.tmp';
-  fs.writeFileSync(tmp, JSON.stringify(list, null, 2));
-  fs.renameSync(tmp, FILE);
-}
+const { load, save } = require('./store')('raccolti');
 
 // Controlla e normalizza i campi; lancia un errore con messaggio in italiano
 function clean(b) {

@@ -17,6 +17,22 @@ seg.addEventListener('click', (e) => {
 document.addEventListener('themechange', paintSeg);
 paintSeg();
 
+// --- Termostato ---
+$('th-icon').innerHTML = icon('thermo');
+const deg = (t) => (t == null ? '—' : `${String(Math.round(t * 10) / 10).replace('.', ',')} °C`);
+async function thermostat() {
+  let t;
+  try { t = await (await fetch('/api/termostato')).json(); } catch { t = { connected: false }; }
+  $('th-status').textContent = t.connected ? 'Collegato' : 'Non collegato';
+  $('th-status').className = 'row-value' + (t.connected ? ' ok' : '');
+  $('th-indoor').textContent = t.connected ? deg(t.indoor) : '—';
+  $('th-target').textContent = t.connected ? deg(t.target) : '—';
+  $('th-heating').textContent = !t.connected ? '—' : t.heating ? 'Acceso' : 'Spento';
+  $('th-updated').textContent = t.updated ? new Date(t.updated).toLocaleTimeString('it-IT') : (t.reason || '—');
+}
+thermostat();
+setInterval(thermostat, 60 * 1000);
+
 // --- Server ---
 $('srv-icon').innerHTML = icon('server');
 

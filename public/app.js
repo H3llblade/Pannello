@@ -88,10 +88,24 @@ $('layer-seg').addEventListener('click', (e) => {
   windy.src = windyUrl();
 });
 
+// --- Riscaldamento (termostato Bosch letto dalla VPS) ---
+const fmtTemp = (t) => `${(Math.round(t * 10) / 10).toString().replace('.', ',')}°`;
+async function heating() {
+  let t;
+  try { t = await (await fetch('/api/termostato')).json(); } catch { t = { connected: false }; }
+  $('heat').dataset.state = !t.connected ? 'off-line' : t.heating ? 'on' : 'off';
+  $('h-icon').innerHTML = icon(t.connected && t.heating ? 'flame' : 'thermo');
+  $('h-temp').textContent = t.connected ? fmtTemp(t.indoor) : '--°';
+  $('h-state').textContent = !t.connected ? 'Non collegato' : t.heating ? 'Riscaldamento acceso' : 'Riscaldamento spento';
+  $('h-target').textContent = t.connected && t.target != null ? `Impostata ${fmtTemp(t.target)}` : '';
+}
+heating();
+setInterval(heating, 60 * 1000);
+
 // --- Sezioni (aprono una pagina del pannello) ---
 $('sections').innerHTML = cfg.sections
   .map((x) => `
-    <a class="tile wide section-tile" href="${x.href}">
+    <a class="tile section-tile" href="${x.href}">
       <span class="dot-icon" style="--c:${x.color}">${icon(x.icon)}</span>
       <span class="section-name">${x.name}</span>
       <span class="section-go">${icon('chevron')}</span>

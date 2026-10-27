@@ -1,8 +1,9 @@
-// Pannello — server HTTP senza dipendenze: file statici da ./public + API /api/stats
+// Pannello — server HTTP senza dipendenze: file statici da ./public + API /api/stats e /api/termostato
 const http = require('http');
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
+const termostato = require('./termostato');
 
 const PORT = Number(process.env.PORT) || 3000;
 const HOST = process.env.HOST || '127.0.0.1';
@@ -72,6 +73,10 @@ const server = http.createServer((req, res) => {
 
   if (url.pathname === '/api/stats') {
     return send(res, 200, JSON.stringify(stats()), MIME['.json']);
+  }
+  if (url.pathname === '/api/termostato') {
+    termostato().then((d) => send(res, 200, JSON.stringify(d), MIME['.json']));
+    return;
   }
 
   // Risolve il percorso dentro PUBLIC_DIR (blocca path traversal)

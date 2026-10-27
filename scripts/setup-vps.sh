@@ -26,6 +26,8 @@ After=network.target
 ExecStart=$(command -v node) $APP_DIR/server.js
 WorkingDirectory=$APP_DIR
 Environment=PORT=$PORT HOST=127.0.0.1
+# credenziali (es. termostato): file opzionale, fuori da git
+EnvironmentFile=-$APP_DIR/.env
 Restart=always
 User=$RUN_USER
 ProtectSystem=strict

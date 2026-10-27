@@ -8,3 +8,4 @@
 - In Impostazioni ogni sezione è una tendina `<details class="group drop">` con `<summary class="row">` (icona + titolo + valore riassuntivo) e contenuto in `.drop-body`.
 - Meteo: Galluzzo, Firenze (`public/config.js`).
 - **Dopo ogni modifica fai sempre commit e push su `origin/main`** (messaggi di commit in italiano). Per pubblicare, l'utente lancia `./deploy` **sulla VPS** dentro `~/Pannello`: scarica da GitHub e riavvia.
+- Termostato Bosch: letto dalla VPS via cloud Bosch in `termostato.js` (cache 60 s), esposto su `/api/termostato` come `{connected, indoor, target, heating, updated}`. Credenziali in `~/Pannello/.env` sulla VPS (gitignored, caricato da systemd con `EnvironmentFile`). Provider ancora da scegliere: manca sapere quale app Bosch usa l'utente.

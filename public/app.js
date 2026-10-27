@@ -73,9 +73,12 @@ $('modal-close').innerHTML = icon('close');
 $('modal-close').addEventListener('click', () => modal.close());
 // clic fuori dal riquadro = chiudi
 modal.addEventListener('click', (e) => { if (e.target === modal) modal.close(); });
-$('weather').addEventListener('click', openWeather);
+// aperto col mouse: alla chiusura niente bordo di focus sul riquadro (con la tastiera resta)
+let byKeyboard = false;
+$('weather').addEventListener('click', () => { byKeyboard = false; openWeather(); });
+modal.addEventListener('close', () => { if (!byKeyboard) $('weather').blur(); });
 $('weather').addEventListener('keydown', (e) => {
-  if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openWeather(); }
+  if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); byKeyboard = true; openWeather(); }
 });
 $('layer-seg').addEventListener('click', (e) => {
   const b = e.target.closest('button');
@@ -85,13 +88,13 @@ $('layer-seg').addEventListener('click', (e) => {
   windy.src = windyUrl();
 });
 
-// --- Scorciatoie ---
-$('links').innerHTML = cfg.links
-  .map((l) => `
-    <a class="tile link-tile" href="${l.url}" target="_blank" rel="noopener">
-      <span class="dot-icon" style="--c:${l.color || '#8e8e93'}">${icon(l.icon)}</span>
-      <span class="link-name">${l.name}</span>
-      <span class="link-host">${new URL(l.url).hostname.replace(/^www\./, '')}</span>
+// --- Sezioni (aprono una pagina del pannello) ---
+$('sections').innerHTML = cfg.sections
+  .map((x) => `
+    <a class="tile wide section-tile" href="${x.href}">
+      <span class="dot-icon" style="--c:${x.color}">${icon(x.icon)}</span>
+      <span class="section-name">${x.name}</span>
+      <span class="section-go">${icon('chevron')}</span>
     </a>`)
   .join('');
 

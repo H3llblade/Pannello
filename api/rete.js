@@ -46,9 +46,10 @@ module.exports = function rete(req, res, url, send) {
     return true;
   }
   if (url.pathname === '/api/rete/download') {
-    const mb = Math.min(25, Math.max(1, Number(url.searchParams.get('mb')) || 5));
+    const mb = Math.min(200, Math.max(1, Number(url.searchParams.get('mb')) || 5));
     let left = mb * 1024 * 1024;
-    res.writeHead(200, { ...noStore, 'Content-Type': 'application/octet-stream', 'Content-Length': left });
+    res.writeHead(200, { ...noStore, 'Content-Type': 'application/octet-stream', 'Content-Length': left, 'X-Accel-Buffering': 'no' });
+    req.on('close', () => (left = 0)); // il browser interrompe il download allo scadere del tempo
     const pump = () => {
       while (left > 0) {
         const n = Math.min(left, CHUNK.length);
@@ -64,7 +65,7 @@ module.exports = function rete(req, res, url, send) {
     let size = 0;
     req.on('data', (c) => {
       size += c.length;
-      if (size > 30 * 1024 * 1024) req.destroy();
+      if (size > 32 * 1024 * 1024) req.destroy();
     });
     req.on('end', () => send(res, 200, JSON.stringify({ bytes: size }), 'application/json; charset=utf-8'));
     return true;

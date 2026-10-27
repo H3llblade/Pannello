@@ -108,8 +108,87 @@ async function network() {
 }
 network();
 
-const mbps = (bytes, ms) => (bytes * 8) / (ms / 1000) / 1e6;
+// Test di velocità verso la VPS, sul modello degli speedtest: più flussi in parallelo,
+// durata a tempo, e i primi istanti (avvio delle connessioni) esclusi dal calcolo.
+const STREAMS = 4;
+const TEST_MS = 8000;
+const WARMUP_MS = 2000;
 const fmt1 = (n) => n.toLocaleString('it-IT', { maximumFractionDigits: n < 10 ? 1 : 0 });
+
+// conta i byte nel tempo e restituisce i Mbps misurati dopo il riscaldamento
+function rateMeter() {
+  const t0 = performance.now();
+  let total = 0, atWarm = null, tWarm = null;
+  return {
+    add(n) {
+      total += n;
+      const now = performance.now();
+      if (atWarm === null && now - t0 >= WARMUP_MS) { atWarm = total; tWarm = now; }
+    },
+    mbps() {
+      const now = performance.now();
+      const [bytes, ms] = atWarm === null ? [total, now - t0] : [total - atWarm, now - tWarm];
+      return ms > 0 ? (bytes * 8) / (ms / 1000) / 1e6 : 0;
+    },
+  };
+}
+
+async function measureDownload(show) {
+  const m = rateMeter();
+  const stop = new AbortController();
+  const timer = setTimeout(() => stop.abort(), TEST_MS);
+  const live = setInterval(() => show(m.mbps()), 300);
+  const stream = async () => {
+    while (!stop.signal.aborted) {
+      const res = await fetch(`/api/rete/download?mb=100&${Math.random()}`, { cache: 'no-store', signal: stop.signal });
+      if (!res.ok) throw new Error(`download ${res.status}`);
+      const reader = res.body.getReader();
+      for (;;) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        m.add(value.byteLength);
+      }
+    }
+  };
+  try {
+    await Promise.all(Array.from({ length: STREAMS }, () => stream().catch((e) => { if (e.name !== 'AbortError') throw e; })));
+  } finally {
+    clearTimeout(timer);
+    clearInterval(live);
+  }
+  return m.mbps();
+}
+
+// upload: blocchi piccoli; contano solo quelli partiti dopo il riscaldamento,
+// sul tempo che va dalla fine del riscaldamento all'ultima conferma del server
+async function measureUpload(show) {
+  const chunk = new Uint8Array(256 * 1024);
+  for (let i = 0; i < chunk.length; i += 65536) crypto.getRandomValues(chunk.subarray(i, i + 65536)); // non comprimibile
+  const t0 = performance.now();
+  const end = t0 + TEST_MS;
+  let bytes = 0, last = t0;
+  const rate = () => (last > t0 + WARMUP_MS ? (bytes * 8) / ((last - t0 - WARMUP_MS) / 1000) / 1e6 : 0);
+  const live = setInterval(() => show(rate()), 300);
+  const stream = async () => {
+    while (performance.now() < end) {
+      const started = performance.now();
+      const res = await fetch('/api/rete/upload', { method: 'POST', body: chunk, cache: 'no-store' });
+      if (!res.ok) throw new Error(`upload ${res.status}`);
+      const got = (await res.json()).bytes; // byte che il server conferma di aver ricevuto
+      if (started >= t0 + WARMUP_MS) {
+        bytes += got;
+        last = performance.now();
+      }
+    }
+  };
+  try {
+    await Promise.all(Array.from({ length: STREAMS }, stream));
+  } finally {
+    clearInterval(live);
+  }
+  return rate();
+}
+
 async function speedTest() {
   const btn = $('sp-run');
   btn.disabled = true;
@@ -117,28 +196,22 @@ async function speedTest() {
   try {
     $('sp-note').textContent = 'Misuro la latenza…';
     const pings = [];
-    for (let i = 0; i < 6; i++) {
+    for (let i = 0; i < 10; i++) {
       const t = performance.now();
       await fetch(`/api/rete/ping?${Math.random()}`, { cache: 'no-store' });
       pings.push(performance.now() - t);
     }
     pings.sort((a, b) => a - b);
-    $('sp-ping').textContent = Math.round(pings[1]); // il secondo migliore: scarta la prima connessione
+    $('sp-ping').textContent = Math.round(pings[Math.floor(pings.length / 2)]); // mediana
 
-    $('sp-note').textContent = 'Misuro il download…';
-    let t = performance.now();
-    const blob = await (await fetch(`/api/rete/download?mb=10&${Math.random()}`, { cache: 'no-store' })).arrayBuffer();
-    $('sp-down').textContent = fmt1(mbps(blob.byteLength, performance.now() - t));
+    $('sp-note').textContent = 'Misuro il download (8 secondi)…';
+    $('sp-down').textContent = fmt1(await measureDownload((v) => ($('sp-down').textContent = fmt1(v))));
 
-    $('sp-note').textContent = "Misuro l'upload…";
-    const data = new Uint8Array(4 * 1024 * 1024);
-    crypto.getRandomValues(data.subarray(0, 65536)); // abbastanza casuale da non essere compresso
-    t = performance.now();
-    await fetch('/api/rete/upload', { method: 'POST', body: data });
-    $('sp-up').textContent = fmt1(mbps(data.byteLength, performance.now() - t));
-    $('sp-note').textContent = `Test completato alle ${new Date().toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })}.`;
-  } catch {
-    $('sp-note').textContent = 'Test non riuscito: il server non risponde.';
+    $('sp-note').textContent = "Misuro l'upload (8 secondi)…";
+    $('sp-up').textContent = fmt1(await measureUpload((v) => ($('sp-up').textContent = fmt1(v))));
+    $('sp-note').textContent = `Test verso il server del pannello completato alle ${new Date().toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })}.`;
+  } catch (e) {
+    $('sp-note').textContent = `Test non riuscito (${e.message || 'il server non risponde'}).`;
   } finally {
     btn.disabled = false;
   }

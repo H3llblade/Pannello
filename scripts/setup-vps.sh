@@ -50,6 +50,8 @@ cat > /etc/nginx/sites-available/pannello <<EOF
 server {
     listen 80;
     server_name $DOMAIN;
+    # test di velocità: blocchi di upload fino a 32 MB (il default di nginx è 1 MB)
+    client_max_body_size 32m;
 
     location / {
         proxy_pass http://127.0.0.1:$PORT;

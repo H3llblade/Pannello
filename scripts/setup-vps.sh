@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
-# Installazione iniziale sulla VPS (Debian/Ubuntu). Lanciato da `./deploy --setup` come root.
-# Variabili: REPO_URL, BRANCH, APP_DIR, DOMAIN, EMAIL (opzionale, per Let's Encrypt)
+# Installazione sulla VPS (Ubuntu/Debian). Lanciato da ./deploy come root.
+# Variabili: APP_DIR (cartella del repo), RUN_USER (utente del servizio), EMAIL (opzionale, per Let's Encrypt)
 set -euo pipefail
+DOMAIN="${DOMAIN:-pannello.devicloud.me}"
 export DEBIAN_FRONTEND=noninteractive
 
 echo "▸ Pacchetti di sistema"
@@ -13,22 +14,6 @@ if ! command -v node >/dev/null || [ "$(node -p 'process.versions.node.split("."
   curl -fsSL https://deb.nodesource.com/setup_22.x | bash - >/dev/null
   apt-get install -y -qq nodejs >/dev/null
 fi
-
-# APP_DIR relativo = relativo alla home dell'utente SSH (sudo mantiene la cartella corrente)
-APP_DIR="$(realpath -m "$APP_DIR")"
-RUN_USER="${SUDO_USER:-root}"
-mkdir -p "$APP_DIR"
-chown "$RUN_USER": "$APP_DIR"
-as_user() { if [ "$RUN_USER" = root ]; then "$@"; else sudo -u "$RUN_USER" "$@"; fi; }
-
-echo "▸ Codice in $APP_DIR"
-if [ ! -d "$APP_DIR/.git" ]; then
-  # funziona anche se la cartella esiste già (vuota o no)
-  as_user git -C "$APP_DIR" init -q
-  as_user git -C "$APP_DIR" remote add origin "$REPO_URL"
-fi
-as_user git -C "$APP_DIR" fetch -q origin "$BRANCH"
-as_user git -C "$APP_DIR" checkout -q -B "$BRANCH" "origin/$BRANCH" -f
 
 echo "▸ Servizio systemd"
 cat > /etc/systemd/system/pannello.service <<EOF

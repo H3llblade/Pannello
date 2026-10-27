@@ -12,22 +12,21 @@ Pannello domestico futuristico → **https://pannello.devicloud.me**
 node server.js        # http://127.0.0.1:3000
 ```
 
-## Deploy
+## Deploy (sulla VPS)
 
-Prima volta:
+Prima volta, nella VPS:
 
 ```bash
-cp deploy.env.example deploy.env   # inserisci IP/utente della VPS
-./deploy --setup                   # installa Node, nginx, HTTPS e il servizio in ~/Pannello
+cd ~/Pannello && git init -q && git remote add origin https://github.com/H3llblade/Pannello.git && git fetch -q origin && git checkout -f -B main origin/main
+./deploy     # installa Node, nginx, HTTPS e il servizio
 ```
 
-Prerequisito: il record DNS `pannello.devicloud.me` deve puntare all'IP della VPS.
+Prerequisito per HTTPS: il record DNS `pannello.devicloud.me` deve puntare all'IP della VPS.
 
-Ogni aggiornamento successivo:
+Ogni aggiornamento successivo, sempre nella VPS:
 
 ```bash
-./deploy                 # commit + push + aggiornamento VPS
-./deploy "messaggio"     # con messaggio di commit
+cd ~/Pannello && ./deploy
 ```
 
 Sulla VPS: `systemctl status pannello`, log con `journalctl -u pannello -f`.

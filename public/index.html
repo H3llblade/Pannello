@@ -26,7 +26,7 @@
         <span class="tile-foot" id="seconds"></span>
       </section>
 
-      <section class="tile wide weather-tile" id="weather">
+      <section class="tile wide weather-tile" id="weather" role="button" tabindex="0" aria-label="Apri radar e previsioni">
         <div class="weather-top">
           <div>
             <span class="tile-label" id="city">—</span>
@@ -51,6 +51,24 @@
       </section>
     </div>
   </main>
+
+  <dialog class="modal" id="weather-modal" aria-label="Radar meteo">
+    <div class="modal-head">
+      <div>
+        <h2 id="modal-title">Meteo</h2>
+        <p class="sub">Dati e mappa da Windy.com</p>
+      </div>
+      <button class="icon-btn" type="button" id="modal-close" aria-label="Chiudi"></button>
+    </div>
+    <div class="segmented scroll" id="layer-seg" role="radiogroup" aria-label="Livello mappa">
+      <button type="button" data-layer="radar" aria-checked="true">Radar</button>
+      <button type="button" data-layer="rain">Pioggia</button>
+      <button type="button" data-layer="wind">Vento</button>
+      <button type="button" data-layer="temp">Temperatura</button>
+      <button type="button" data-layer="clouds">Nuvole</button>
+    </div>
+    <div class="windy"><iframe id="windy" title="Mappa Windy" loading="lazy"></iframe></div>
+  </dialog>
 
   <script src="/config.js"></script>
   <script src="/common.js"></script>

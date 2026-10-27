@@ -50,6 +50,41 @@ async function weather() {
 weather();
 setInterval(weather, 15 * 60 * 1000);
 
+// --- Popup meteo con mappa e previsioni di Windy ---
+const modal = $('weather-modal');
+const windy = $('windy');
+let layer = 'radar';
+
+function windyUrl() {
+  const q = new URLSearchParams({
+    type: 'map', location: 'coordinates', lat: cfg.lat, lon: cfg.lon, zoom: layer === 'radar' ? 9 : 7,
+    overlay: layer, product: layer === 'radar' ? 'radar' : 'ecmwf', level: 'surface',
+    detailLat: cfg.lat, detailLon: cfg.lon, detail: true, marker: true, message: true,
+    metricTemp: '°C', metricWind: 'km/h', metricRain: 'mm',
+  });
+  return `https://embed.windy.com/embed.html?${q}`;
+}
+function openWeather() {
+  $('modal-title').textContent = cfg.city;
+  windy.src = windyUrl();
+  modal.showModal();
+}
+$('modal-close').innerHTML = icon('close');
+$('modal-close').addEventListener('click', () => modal.close());
+// clic fuori dal riquadro = chiudi
+modal.addEventListener('click', (e) => { if (e.target === modal) modal.close(); });
+$('weather').addEventListener('click', openWeather);
+$('weather').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openWeather(); }
+});
+$('layer-seg').addEventListener('click', (e) => {
+  const b = e.target.closest('button');
+  if (!b) return;
+  layer = b.dataset.layer;
+  $('layer-seg').querySelectorAll('button').forEach((x) => x.setAttribute('aria-checked', x === b));
+  windy.src = windyUrl();
+});
+
 // --- Scorciatoie ---
 $('links').innerHTML = cfg.links
   .map((l) => `

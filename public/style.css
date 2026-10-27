@@ -231,6 +231,10 @@ nav a.active { background: var(--surface-2); color: var(--text); }
 .weather-tile[data-tone="night"] { background: linear-gradient(160deg, #1b2347, #3b4a7a); }
 .weather-tile[data-tone="grey"] { background: linear-gradient(160deg, #6b7a8f, #9aa7b8); }
 .weather-tile[data-tone="rain"] { background: linear-gradient(160deg, #36475e, #61758f); }
+.weather-tile { cursor: pointer; transition: transform .25s cubic-bezier(.2, .8, .2, 1), box-shadow .25s; }
+.weather-tile:hover { transform: translateY(-3px); box-shadow: var(--shadow-hover); }
+.weather-tile:active { transform: scale(.98); }
+.weather-tile:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
 .weather-tile .tile-label { color: rgba(255, 255, 255, .85); }
 .weather-top { display: flex; justify-content: space-between; align-items: flex-start; }
 .temp { font-size: clamp(56px, 8vw, 80px); font-weight: 300; letter-spacing: -0.04em; line-height: 1.05; }
@@ -299,6 +303,33 @@ nav a.active { background: var(--surface-2); color: var(--text); }
   outline: none;
 }
 .notes-tile textarea::placeholder { color: var(--text-3); }
+
+/* ---------- Popup ---------- */
+.modal {
+  width: min(1000px, calc(100% - 32px));
+  max-height: calc(100% - 32px);
+  padding: 20px;
+  border: 1px solid var(--border);
+  border-radius: 28px;
+  background: var(--surface-solid);
+  color: var(--text);
+  box-shadow: 0 30px 80px rgba(0, 0, 0, .35);
+}
+.modal[open] { display: flex; flex-direction: column; gap: 16px; animation: pop .3s cubic-bezier(.2, .8, .2, 1); }
+.modal::backdrop { background: rgba(0, 0, 0, .35); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+@keyframes pop { from { opacity: 0; transform: translateY(16px) scale(.97); } }
+.modal-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; }
+.modal-head h2 { margin: 0; font-size: 24px; letter-spacing: -0.02em; }
+.modal-head .sub { font-size: 14px; }
+.segmented.scroll { align-self: flex-start; max-width: 100%; overflow-x: auto; }
+.segmented.scroll button { white-space: nowrap; }
+.windy {
+  height: min(640px, 70vh);
+  border-radius: 18px;
+  overflow: hidden;
+  background: var(--surface-2);
+}
+.windy iframe { width: 100%; height: 100%; border: 0; display: block; }
 
 /* ---------- Impostazioni: liste raggruppate stile iOS ---------- */
 .group-title {

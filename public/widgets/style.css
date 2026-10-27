@@ -284,9 +284,7 @@ nav a.active { background: var(--surface-2); color: var(--text); }
 .heat-tile[data-state="on"] .heat-icon { color: #fff; }
 .heat-tile[data-state="off-line"] .temp { color: var(--text-3); }
 .heat-tile { transition: background .6s, color .6s; }
-.heat-info, .heat-ctrl { display: inline-flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-.link-btn { border: 0; padding: 0; background: none; color: inherit; font: inherit; font-size: 13px; font-weight: 600; text-decoration: underline; text-underline-offset: 3px; opacity: .8; cursor: pointer; }
-.link-btn:hover { opacity: 1; }
+.heat-ctrl { display: inline-flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 .heat-error { margin: 10px 0 0; font-size: 13px; font-weight: 600; color: var(--bad); }
 .heat-tile[data-state="on"] .heat-error { color: #fff; }
 
@@ -317,7 +315,13 @@ nav a.active { background: var(--surface-2); color: var(--text); }
 .switch[aria-checked="true"] i { transform: translateX(20px); }
 .switch:disabled { opacity: .6; cursor: progress; }
 .switch:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
-.heat-tile[data-state="on"] .switch[aria-checked="true"] { background: rgba(255, 255, 255, .45); }
+/* variante con fiammella: pista arancione, fiamma grigia da spento e arancione da acceso */
+.switch.flame { width: 56px; height: 32px; }
+.switch.flame i { width: 28px; height: 28px; display: grid; place-items: center; color: var(--text-3); font-size: 15px; transition: transform .25s cubic-bezier(.2, .8, .2, 1), color .25s; }
+.switch.flame i .icon { stroke-width: 2.4; }
+.switch.flame[aria-checked="true"] { background: #ff8a1f; }
+.switch.flame[aria-checked="true"] i { transform: translateX(24px); color: #ff7a00; }
+.heat-tile[data-state="on"] .switch.flame[aria-checked="true"] { background: rgba(255, 255, 255, .4); }
 
 /* cambio di stato: piccolo «battito» del riquadro e della fiamma */
 .heat-tile.flash { animation: heat-pulse 1.2s cubic-bezier(.2, .8, .2, 1); }

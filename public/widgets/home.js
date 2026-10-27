@@ -110,20 +110,19 @@ function showHeating(t) {
   $('h-icon').innerHTML = icon(t.connected && t.heating ? 'flame' : 'thermo');
   $('h-temp').textContent = t.connected ? fmtTemp(t.indoor) : '--°';
   const since = t.since ? ` alle ${hhmm(t.since)}` : '';
-  const enabled = t.enabled !== false;
+  const manual = t.mode === 'manual';
   $('h-state').textContent = !t.connected ? 'Non collegato'
-    : !enabled ? `Spento${since}`
-    : t.heating ? `Acceso${since}`
-    : 'In attesa · temperatura raggiunta';
-  $('h-target').textContent = t.connected && t.target != null && enabled ? `Impostata ${fmtTemp(t.target)}` : '';
-  // interruttore e «torna al programma» solo se il termostato è collegato
+    : t.heating ? `Acceso${since}${manual ? ' · manuale' : ''}`
+    : manual ? 'Manuale · in partenza'
+    : `Spento${since}`;
+  $('h-target').textContent = t.connected && t.target != null ? `Impostata ${fmtTemp(t.target)}` : '';
+  // interruttore = accensione manuale (acceso solo se il termostato è in manuale)
   const sw = $('h-switch');
   sw.hidden = !t.connected;
-  if (!pending) sw.setAttribute('aria-checked', String(t.connected && enabled));
-  $('h-program').hidden = !t.connected || t.mode !== 'manual' || !enabled;
+  if (!pending) sw.setAttribute('aria-checked', String(t.connected && manual));
 }
 
-// --- Comandi: interruttore acceso/spento e ritorno al programma settimanale ---
+// --- Interruttore: acceso = accensione manuale, spento = programma settimanale ---
 async function sendCommand(azione, btn) {
   pending = true;
   btn.disabled = true;
@@ -143,13 +142,13 @@ async function sendCommand(azione, btn) {
     btn.disabled = false;
   }
 }
+$('h-switch').querySelector('i').innerHTML = icon('flame');
 $('h-switch').addEventListener('click', (e) => {
   const sw = e.currentTarget;
   const on = sw.getAttribute('aria-checked') !== 'true';
   sw.setAttribute('aria-checked', String(on)); // risposta immediata, poi conferma dal termostato
-  sendCommand(on ? 'accendi' : 'spegni', sw);
+  sendCommand(on ? 'accendi' : 'programma', sw);
 });
-$('h-program').addEventListener('click', (e) => sendCommand('programma', e.currentTarget));
 
 async function heating() {
   try { showHeating(await (await fetch('/api/termostato')).json()); } catch { showHeating({ connected: false }); }

@@ -32,8 +32,8 @@ function showThermostat(t) {
   $('th-indoor').textContent = deg(t.indoor);
   $('th-target').textContent = deg(t.target);
   $('th-hum').textContent = t.humidity == null ? '—' : `${String(Math.round(t.humidity)).replace('.', ',')}%`;
-  $('th-heating').textContent = t.enabled === false ? 'Spento (antigelo 5 °C)' : t.heating ? 'Acceso' : 'In attesa';
-  $('th-mode').textContent = t.mode === 'clock' ? 'Programma settimanale' : t.mode === 'manual' ? 'Manuale' : '—';
+  $('th-heating').textContent = t.heating ? 'Acceso' : 'Spento';
+  $('th-mode').textContent = t.mode === 'clock' ? 'Programma settimanale' : t.mode === 'manual' ? 'Accensione manuale' : '—';
   $('th-updated').textContent = new Date(t.updated).toLocaleTimeString('it-IT');
 }
 async function thermostat() {

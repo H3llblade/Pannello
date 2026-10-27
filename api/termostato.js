@@ -20,9 +20,9 @@ const API = 'https://pointt-api.bosch-thermotechnology.com/pointt-api/api/v1';
 const FILE = path.join(__dirname, '..', 'data', 'bosch.json');
 const CACHE_MS = 25 * 1000; // poco meno di WATCH_MS, così ogni controllo periodico legge dati freschi
 const WATCH_MS = 30 * 1000; // controllo periodico mentre qualcuno ha il pannello aperto
-// EasyControl non ha un vero «spento»: si usa la modalità manuale alla temperatura minima (antigelo)
-const OFF_TEMP = 5;
-const DEFAULT_COMFORT = 21;
+// Accensione manuale: modalità manuale a una temperatura sopra quella di casa, così la caldaia parte
+const MANUAL_TEMP = 21;
+const MAX_TEMP = 30;
 
 let cache = null;
 let lastData = null; // ultima lettura riuscita (per sapere quando cambia lo stato)
@@ -154,9 +154,7 @@ async function readFromBosch() {
     indoor: Number(val(indoor)),
     target: val(target) != null ? Number(val(target)) : null,
     humidity: val(humidity) != null ? Number(val(humidity)) : null,
-    mode: val(mode), // "clock" = programma settimanale, "manual" = manuale
-    // «spento» dal pannello = manuale alla temperatura antigelo
-    enabled: !(val(mode) === 'manual' && Number(val(target)) <= OFF_TEMP),
+    mode: val(mode), // "clock" = programma settimanale, "manual" = accensione manuale
     heating,
     status,
     updated: Date.now(),
@@ -189,7 +187,7 @@ async function termostato() {
 // le pagine solo quando qualcosa cambia (acceso/spento, temperature, collegamento).
 const listeners = new Set();
 let watchTimer = null;
-const fingerprint = (d) => JSON.stringify([d.connected, d.heating, d.indoor, d.target, d.humidity, d.mode, d.enabled, d.reason]);
+const fingerprint = (d) => JSON.stringify([d.connected, d.heating, d.indoor, d.target, d.humidity, d.mode, d.reason]);
 let lastSent = null;
 
 async function tick() {
@@ -216,19 +214,15 @@ function changed() {
   tick().catch(() => {});
 }
 
-// --- Comandi: accendi / spegni / torna al programma ---
+// --- Comandi: accensione manuale / ritorno al programma settimanale ---
 async function command(action) {
   if (!load().refreshToken) throw new Error('Account Bosch non collegato');
-  const now = cache?.data?.connected ? cache.data : await readFromBosch();
-  if (action === 'spegni') {
-    // ricordo la temperatura in uso per la prossima accensione
-    if (now.target > OFF_TEMP) save({ ...load(), comfort: now.target });
+  if (action === 'accendi') {
+    const now = cache?.data?.connected ? cache.data : await readFromBosch();
+    // almeno 1 °C sopra la temperatura attuale (a passi di 0,5), altrimenti la caldaia non parte
+    const above = Math.ceil((now.indoor + 1) * 2) / 2;
     await writeResource('zones/zn1/userMode', 'manual');
-    await writeResource('zones/zn1/manualTemperatureHeating', OFF_TEMP);
-  } else if (action === 'accendi') {
-    const comfort = load().comfort || (now.target > OFF_TEMP ? now.target : DEFAULT_COMFORT);
-    await writeResource('zones/zn1/userMode', 'manual');
-    await writeResource('zones/zn1/manualTemperatureHeating', comfort);
+    await writeResource('zones/zn1/manualTemperatureHeating', Math.min(MAX_TEMP, Math.max(MANUAL_TEMP, above)));
   } else if (action === 'programma') {
     await writeResource('zones/zn1/userMode', 'clock');
   } else {

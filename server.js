@@ -82,16 +82,37 @@ function termostatoApi(req, res, url) {
   const json = (code, d) => send(res, code, JSON.stringify(d), MIME['.json']);
   const p = url.pathname;
   if (p === '/api/termostato' && req.method === 'GET') return termostato.termostato().then((d) => json(200, d));
+  if (p === '/api/termostato/eventi') return termostatoEvents(req, res);
   if (req.method !== 'POST') return json(405, { error: 'Metodo non permesso' });
   if (p === '/api/termostato/login') return json(200, { url: termostato.startLogin() });
-  if (p === '/api/termostato/scollega') return termostato.unlink(), json(200, { ok: true });
-  if (p === '/api/termostato/collega') {
+  if (p === '/api/termostato/scollega') return termostato.unlink(), termostato.changed(), json(200, { ok: true });
+  if (p === '/api/termostato/comando') {
     return readBody(req)
-      .then((b) => termostato.finishLogin(b.url))
+      .then((b) => termostato.command(b.azione))
       .then(() => json(200, { ok: true }))
       .catch((e) => json(400, { error: e.message }));
   }
+  if (p === '/api/termostato/collega') {
+    return readBody(req)
+      .then((b) => termostato.finishLogin(b.url))
+      .then(() => { termostato.changed(); json(200, { ok: true }); })
+      .catch((e) => json(400, { error: e.message }));
+  }
   json(404, { error: 'Non trovato' });
+}
+
+// Server-Sent Events: la pagina resta in ascolto e riceve i dati del termostato appena cambiano
+function termostatoEvents(req, res) {
+  res.writeHead(200, {
+    'Content-Type': 'text/event-stream; charset=utf-8',
+    'Cache-Control': 'no-store',
+    'X-Accel-Buffering': 'no', // nginx non deve trattenere i messaggi
+  });
+  const push = (d) => res.write(`data: ${JSON.stringify(d)}\n\n`);
+  termostato.termostato().then(push);
+  const stop = termostato.subscribe(push);
+  const keepAlive = setInterval(() => res.write(': ping\n\n'), 25000); // sotto il timeout di nginx (60 s)
+  req.on('close', () => { stop(); clearInterval(keepAlive); });
 }
 
 const server = http.createServer((req, res) => {

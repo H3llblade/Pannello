@@ -56,9 +56,16 @@
           <div class="heat-icon" id="h-icon"></div>
         </div>
         <div class="weather-bottom">
-          <span class="pill" id="h-state">Non collegato</span>
-          <span class="tile-foot" id="h-target"></span>
+          <span class="heat-info">
+            <span class="pill" id="h-state">Non collegato</span>
+            <button class="link-btn" type="button" id="h-program" hidden>Torna al programma</button>
+          </span>
+          <span class="heat-ctrl">
+            <span class="tile-foot" id="h-target"></span>
+            <button class="switch" type="button" role="switch" aria-checked="false" aria-label="Riscaldamento acceso" id="h-switch" hidden><i></i></button>
+          </span>
         </div>
+        <p class="heat-error" id="h-error" role="alert" hidden></p>
       </section>
 
       <div class="tiles-group" id="sections"></div>

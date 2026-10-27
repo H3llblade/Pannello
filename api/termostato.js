@@ -18,9 +18,14 @@ const SCOPE = [
 const API = 'https://pointt-api.bosch-thermotechnology.com/pointt-api/api/v1';
 
 const FILE = path.join(__dirname, '..', 'data', 'bosch.json');
-const CACHE_MS = 60 * 1000; // il cloud Bosch non va interrogato più di una volta al minuto
+const CACHE_MS = 25 * 1000; // poco meno di WATCH_MS, così ogni controllo periodico legge dati freschi
+const WATCH_MS = 30 * 1000; // controllo periodico mentre qualcuno ha il pannello aperto
+// EasyControl non ha un vero «spento»: si usa la modalità manuale alla temperatura minima (antigelo)
+const OFF_TEMP = 5;
+const DEFAULT_COMFORT = 21;
 
 let cache = null;
+let lastData = null; // ultima lettura riuscita (per sapere quando cambia lo stato)
 let access = null; // { token, expires }
 let refreshing = null; // una sola rinnovazione alla volta: il refresh token vale per un solo uso
 
@@ -64,16 +69,19 @@ async function accessToken() {
   return refreshing;
 }
 
-async function api(p) {
+async function api(p, method = 'GET', body) {
   const res = await fetch(`${API}/${p}`, {
-    headers: { Authorization: `Bearer ${await accessToken()}`, Accept: 'application/json' },
+    method,
+    headers: { Authorization: `Bearer ${await accessToken()}`, Accept: 'application/json', ...(body ? { 'Content-Type': 'application/json' } : {}) },
+    body: body && JSON.stringify(body),
     signal: AbortSignal.timeout(10000),
   });
   if (res.status === 401) access = null;
   if (!res.ok) throw new Error(`Bosch ha risposto ${res.status} per ${p}`);
-  return res.json();
+  return method === 'GET' ? res.json() : null; // le PUT rispondono senza contenuto
 }
 const resource = async (p) => (await api(`gateways/${load().deviceId}/resource/${p}`)).value;
+const writeResource = (p, value) => api(`gateways/${load().deviceId}/resource/${p}`, 'PUT', { value });
 
 // --- Collegamento dell'account ---
 function startLogin() {
@@ -127,12 +135,13 @@ function unlink() {
 // --- Lettura ---
 async function readFromBosch() {
   if (!load().refreshToken) return { connected: false, linkable: true, reason: 'Account Bosch non collegato' };
-  const [indoor, target, zones, power, humidity] = await Promise.allSettled([
+  const [indoor, target, zones, power, humidity, mode] = await Promise.allSettled([
     resource('zones/zn1/temperatureActual'),
     resource('zones/zn1/temperatureHeatingSetpoint'),
     resource('zones/list'),
     resource('heatingCircuits/hc1/powerSetpoint'),
     resource('system/sensors/humidity/indoor_h1'),
+    resource('zones/zn1/userMode'),
   ]);
   if (indoor.status === 'rejected') throw indoor.reason;
   const val = (r) => (r.status === 'fulfilled' ? r.value : null);
@@ -145,6 +154,9 @@ async function readFromBosch() {
     indoor: Number(val(indoor)),
     target: val(target) != null ? Number(val(target)) : null,
     humidity: val(humidity) != null ? Number(val(humidity)) : null,
+    mode: val(mode), // "clock" = programma settimanale, "manual" = manuale
+    // «spento» dal pannello = manuale alla temperatura antigelo
+    enabled: !(val(mode) === 'manual' && Number(val(target)) <= OFF_TEMP),
     heating,
     status,
     updated: Date.now(),
@@ -160,8 +172,73 @@ async function termostato() {
     data = { connected: false, linkable: true, reason: `Errore dal cloud Bosch: ${e.message}` };
     console.error('termostato:', e.message);
   }
+  // ricorda da quando il riscaldamento è nello stato attuale (per «Acceso alle 19:42»)
+  const prev = lastData;
+  if (data.connected) {
+    // l'orario si conosce solo se il cambio avviene mentre il server è acceso
+    data.since = prev?.connected ? (prev.heating === data.heating ? prev.since : Date.now()) : null;
+    if (prev?.connected && prev.heating !== data.heating) console.log(`termostato: riscaldamento ${data.heating ? 'acceso' : 'spento'}`);
+  }
   cache = { time: Date.now(), data };
+  if (data.connected) lastData = data;
   return data;
 }
 
-module.exports = { termostato, startLogin, finishLogin, unlink };
+// --- Aggiornamenti in tempo reale ---
+// Mentre almeno una pagina è in ascolto, il server rilegge il termostato ogni WATCH_MS e avvisa
+// le pagine solo quando qualcosa cambia (acceso/spento, temperature, collegamento).
+const listeners = new Set();
+let watchTimer = null;
+const fingerprint = (d) => JSON.stringify([d.connected, d.heating, d.indoor, d.target, d.humidity, d.mode, d.enabled, d.reason]);
+let lastSent = null;
+
+async function tick() {
+  const data = await termostato();
+  const fp = fingerprint(data);
+  if (fp !== lastSent) {
+    lastSent = fp;
+    for (const fn of listeners) fn(data);
+  }
+}
+
+function subscribe(fn) {
+  listeners.add(fn);
+  if (!watchTimer) watchTimer = setInterval(() => tick().catch(() => {}), WATCH_MS);
+  return () => {
+    listeners.delete(fn);
+    if (!listeners.size) { clearInterval(watchTimer); watchTimer = null; lastSent = null; }
+  };
+}
+
+// dopo collegamento/scollegamento avvisa subito le pagine aperte
+function changed() {
+  cache = null;
+  tick().catch(() => {});
+}
+
+// --- Comandi: accendi / spegni / torna al programma ---
+async function command(action) {
+  if (!load().refreshToken) throw new Error('Account Bosch non collegato');
+  const now = cache?.data?.connected ? cache.data : await readFromBosch();
+  if (action === 'spegni') {
+    // ricordo la temperatura in uso per la prossima accensione
+    if (now.target > OFF_TEMP) save({ ...load(), comfort: now.target });
+    await writeResource('zones/zn1/userMode', 'manual');
+    await writeResource('zones/zn1/manualTemperatureHeating', OFF_TEMP);
+  } else if (action === 'accendi') {
+    const comfort = load().comfort || (now.target > OFF_TEMP ? now.target : DEFAULT_COMFORT);
+    await writeResource('zones/zn1/userMode', 'manual');
+    await writeResource('zones/zn1/manualTemperatureHeating', comfort);
+  } else if (action === 'programma') {
+    await writeResource('zones/zn1/userMode', 'clock');
+  } else {
+    throw new Error('Comando non valido');
+  }
+  console.log(`termostato: comando «${action}»`);
+  // il termostato impiega qualche secondo ad applicare il comando: rileggo subito e poco dopo
+  changed();
+  setTimeout(changed, 5000);
+  setTimeout(changed, 15000);
+}
+
+module.exports = { termostato, subscribe, startLogin, finishLogin, unlink, changed, command };

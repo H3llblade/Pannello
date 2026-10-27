@@ -22,9 +22,7 @@ $('th-icon').innerHTML = icon('thermo');
 $('th-open').innerHTML = `${icon('link')}Apri login Bosch`;
 const deg = (t) => (t == null ? '—' : `${String(Math.round(t * 10) / 10).replace('.', ',')} °C`);
 
-async function thermostat() {
-  let t;
-  try { t = await (await fetch('/api/termostato')).json(); } catch { t = { connected: false, reason: 'Server non raggiungibile' }; }
+function showThermostat(t) {
   $('th-status').textContent = t.connected ? (t.heating ? 'Acceso' : 'Collegato') : 'Non collegato';
   $('th-status').className = 'row-value' + (t.connected ? ' ok' : '');
   $('th-data').hidden = !t.connected;
@@ -34,8 +32,13 @@ async function thermostat() {
   $('th-indoor').textContent = deg(t.indoor);
   $('th-target').textContent = deg(t.target);
   $('th-hum').textContent = t.humidity == null ? '—' : `${String(Math.round(t.humidity)).replace('.', ',')}%`;
-  $('th-heating').textContent = t.heating ? 'Acceso' : 'Spento';
+  $('th-heating').textContent = t.enabled === false ? 'Spento (antigelo 5 °C)' : t.heating ? 'Acceso' : 'In attesa';
+  $('th-mode').textContent = t.mode === 'clock' ? 'Programma settimanale' : t.mode === 'manual' ? 'Manuale' : '—';
   $('th-updated').textContent = new Date(t.updated).toLocaleTimeString('it-IT');
+}
+async function thermostat() {
+  try { showThermostat(await (await fetch('/api/termostato')).json()); }
+  catch { showThermostat({ connected: false, reason: 'Server non raggiungibile' }); }
 }
 
 const post = async (path, body) => {
@@ -88,8 +91,9 @@ $('th-unlink').addEventListener('click', async (e) => {
   await post('/api/termostato/scollega').catch(() => {});
   thermostat();
 });
-thermostat();
-setInterval(thermostat, 60 * 1000);
+// in tempo reale come in Home; il primo messaggio arriva subito all'apertura
+if ('EventSource' in window) new EventSource('/api/termostato/eventi').onmessage = (e) => showThermostat(JSON.parse(e.data));
+else { thermostat(); setInterval(thermostat, 60 * 1000); }
 
 // --- Connessione Starlink ---
 $('net-icon').innerHTML = icon('wifi');

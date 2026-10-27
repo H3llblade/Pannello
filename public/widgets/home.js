@@ -89,18 +89,83 @@ $('layer-seg').addEventListener('click', (e) => {
 });
 
 // --- Riscaldamento (termostato Bosch letto dalla VPS) ---
+// In tempo reale: la pagina resta in ascolto su /api/termostato/eventi e il server manda i dati
+// appena cambiano. Se l'ascolto cade, il browser si ricollega da solo; in più un controllo di riserva.
 const fmtTemp = (t) => `${(Math.round(t * 10) / 10).toString().replace('.', ',')}°`;
-async function heating() {
-  let t;
-  try { t = await (await fetch('/api/termostato')).json(); } catch { t = { connected: false }; }
-  $('heat').dataset.state = !t.connected ? 'off-line' : t.heating ? 'on' : 'off';
+const hhmm = (ts) => new Date(ts).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
+let lastHeat = null;
+let pending = false; // comando in corso: l'interruttore non segue gli aggiornamenti
+
+function showHeating(t) {
+  const state = !t.connected ? 'off-line' : t.heating ? 'on' : 'off';
+  const tile = $('heat');
+  // animazione solo quando lo stato cambia davanti all'utente (non al primo caricamento)
+  if (lastHeat && lastHeat !== state && state !== 'off-line') {
+    tile.classList.remove('flash');
+    void tile.offsetWidth; // riavvia l'animazione
+    tile.classList.add('flash');
+  }
+  lastHeat = state;
+  tile.dataset.state = state;
   $('h-icon').innerHTML = icon(t.connected && t.heating ? 'flame' : 'thermo');
   $('h-temp').textContent = t.connected ? fmtTemp(t.indoor) : '--°';
-  $('h-state').textContent = !t.connected ? 'Non collegato' : t.heating ? 'Riscaldamento acceso' : 'Riscaldamento spento';
-  $('h-target').textContent = t.connected && t.target != null ? `Impostata ${fmtTemp(t.target)}` : '';
+  const since = t.since ? ` alle ${hhmm(t.since)}` : '';
+  const enabled = t.enabled !== false;
+  $('h-state').textContent = !t.connected ? 'Non collegato'
+    : !enabled ? `Spento${since}`
+    : t.heating ? `Acceso${since}`
+    : 'In attesa · temperatura raggiunta';
+  $('h-target').textContent = t.connected && t.target != null && enabled ? `Impostata ${fmtTemp(t.target)}` : '';
+  // interruttore e «torna al programma» solo se il termostato è collegato
+  const sw = $('h-switch');
+  sw.hidden = !t.connected;
+  if (!pending) sw.setAttribute('aria-checked', String(t.connected && enabled));
+  $('h-program').hidden = !t.connected || t.mode !== 'manual' || !enabled;
 }
-heating();
-setInterval(heating, 60 * 1000);
+
+// --- Comandi: interruttore acceso/spento e ritorno al programma settimanale ---
+async function sendCommand(azione, btn) {
+  pending = true;
+  btn.disabled = true;
+  $('h-error').hidden = true;
+  try {
+    const res = await fetch('/api/termostato/comando', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ azione }),
+    });
+    const out = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(out.error || 'comando non riuscito');
+  } catch (e) {
+    $('h-error').textContent = `Il termostato non ha ricevuto il comando: ${e.message === 'Failed to fetch' ? 'server non raggiungibile' : e.message}.`;
+    $('h-error').hidden = false;
+    heating(); // rimette l'interruttore nello stato reale
+  } finally {
+    pending = false;
+    btn.disabled = false;
+  }
+}
+$('h-switch').addEventListener('click', (e) => {
+  const sw = e.currentTarget;
+  const on = sw.getAttribute('aria-checked') !== 'true';
+  sw.setAttribute('aria-checked', String(on)); // risposta immediata, poi conferma dal termostato
+  sendCommand(on ? 'accendi' : 'spegni', sw);
+});
+$('h-program').addEventListener('click', (e) => sendCommand('programma', e.currentTarget));
+
+async function heating() {
+  try { showHeating(await (await fetch('/api/termostato')).json()); } catch { showHeating({ connected: false }); }
+}
+
+let lastEvent = 0;
+if ('EventSource' in window) {
+  const es = new EventSource('/api/termostato/eventi');
+  es.onmessage = (e) => { lastEvent = Date.now(); showHeating(JSON.parse(e.data)); };
+} else {
+  heating();
+}
+// riserva: se per 2 minuti non arriva niente, chiedo io
+setInterval(() => { if (Date.now() - lastEvent > 120000) heating(); }, 60000);
+// tornando sulla scheda dopo un po', aggiornamento immediato
+document.addEventListener('visibilitychange', () => { if (!document.hidden) heating(); });
 
 // --- Sezioni (aprono una pagina del pannello) ---
 $('sections').innerHTML = cfg.sections

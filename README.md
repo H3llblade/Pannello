@@ -2,9 +2,11 @@
 
 Pannello domestico futuristico → **https://pannello.devicloud.me**
 
-- `server.js` — server Node senza dipendenze: serve `public/` e l'API `/api/stats` (CPU, RAM, disco, uptime della VPS)
-- `public/` — le pagine. Una nuova pagina `public/xyz.html` è raggiungibile su `/xyz`
-- `public/config.js` — città del meteo e scorciatoie
+- `server.js` — server Node senza dipendenze
+- `public/pages/` — le pagine HTML (`public/pages/xyz.html` è raggiungibile su `/xyz`)
+- `public/widgets/` — CSS e JavaScript del browser; `config.js` contiene città del meteo, sezioni della Home e peso specifico dell'olio
+- `api/` — moduli del server: stato VPS, termostato, raccolti
+- `data/` — dati salvati sulla VPS (non su GitHub)
 
 ## Sviluppo locale
 

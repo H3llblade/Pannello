@@ -16,6 +16,11 @@ if ! command -v node >/dev/null || [ "$(node -p 'process.versions.node.split("."
   apt-get install -y -qq nodejs >/dev/null
 fi
 
+echo "▸ Cartella dati"
+# data/ (raccolti, ecc.) e .env restano fuori da git: deploy non li tocca
+mkdir -p "$APP_DIR/data"
+chown "$RUN_USER": "$APP_DIR/data"
+
 echo "▸ Servizio systemd"
 cat > /etc/systemd/system/pannello.service <<EOF
 [Unit]
@@ -31,6 +36,7 @@ EnvironmentFile=-$APP_DIR/.env
 Restart=always
 User=$RUN_USER
 ProtectSystem=strict
+ReadWritePaths=$APP_DIR/data
 
 [Install]
 WantedBy=multi-user.target

@@ -1,13 +1,19 @@
-// Pannello — server HTTP senza dipendenze: file statici da ./public + API /api/stats e /api/termostato
+// Pannello — server HTTP senza dipendenze.
+//   /                -> public/pages/index.html
+//   /<nome>          -> public/pages/<nome>.html
+//   /widgets/<file>  -> public/widgets/<file>  (css e js del browser)
+//   /api/...         -> moduli in api/
 const http = require('http');
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
-const termostato = require('./termostato');
+const termostato = require('./api/termostato');
+const raccolti = require('./api/raccolti');
 
 const PORT = Number(process.env.PORT) || 3000;
 const HOST = process.env.HOST || '127.0.0.1';
-const PUBLIC_DIR = path.join(__dirname, 'public');
+const PAGES_DIR = path.join(__dirname, 'public', 'pages');
+const WIDGETS_DIR = path.join(__dirname, 'public', 'widgets');
 
 const MIME = {
   '.html': 'text/html; charset=utf-8',
@@ -78,23 +84,27 @@ const server = http.createServer((req, res) => {
     termostato().then((d) => send(res, 200, JSON.stringify(d), MIME['.json']));
     return;
   }
+  if (raccolti(req, res, url, send)) return;
 
-  // Risolve il percorso dentro PUBLIC_DIR (blocca path traversal)
   let rel;
   try { rel = decodeURIComponent(url.pathname); } catch { return send(res, 400, 'Bad request'); }
-  if (rel.endsWith('/')) rel += 'index.html';
-  let file = path.normalize(path.join(PUBLIC_DIR, rel));
-  if (!file.startsWith(PUBLIC_DIR)) return send(res, 403, 'Forbidden');
 
-  // /pagina -> /pagina.html
-  if (!path.extname(file) && fs.existsSync(file + '.html')) file += '.html';
+  let file;
+  if (rel.startsWith('/widgets/')) {
+    // resta dentro WIDGETS_DIR (blocca path traversal)
+    file = path.normalize(path.join(WIDGETS_DIR, rel.slice('/widgets/'.length)));
+    if (!file.startsWith(WIDGETS_DIR + path.sep)) return send(res, 403, 'Forbidden');
+  } else {
+    // pagine: solo nomi semplici, es. /raccolta-olive
+    const name = rel === '/' ? 'index' : rel.slice(1).replace(/\.html$/, '');
+    file = /^[a-z0-9-]+$/.test(name) ? path.join(PAGES_DIR, name + '.html') : null;
+  }
 
+  const notFound = () =>
+    fs.readFile(path.join(PAGES_DIR, '404.html'), (e, d) => send(res, 404, e ? 'Not found' : d, MIME['.html']));
+  if (!file) return notFound();
   fs.readFile(file, (err, data) => {
-    if (err) {
-      return fs.readFile(path.join(PUBLIC_DIR, '404.html'), (e, d) =>
-        send(res, 404, e ? 'Not found' : d, MIME['.html'])
-      );
-    }
+    if (err) return notFound();
     send(res, 200, data, MIME[path.extname(file)] || 'application/octet-stream');
   });
 });

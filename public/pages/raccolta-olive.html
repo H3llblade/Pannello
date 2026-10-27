@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Pannello · Raccolta olive</title>
+  <script src="/widgets/theme.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/widgets/style.css">
+</head>
+<body>
+  <header class="topbar" id="topbar"></header>
+
+  <main class="page">
+    <div class="page-head">
+      <div class="head-row">
+        <h1>Raccolta olive</h1>
+        <button class="button" type="button" id="new-btn"></button>
+      </div>
+    </div>
+
+    <!-- nessun dato -->
+    <section class="tile placeholder" id="empty" hidden>
+      <span class="dot-icon" style="--c:#34a853" id="empty-icon"></span>
+      <h2>Ancora nessun raccolto</h2>
+      <p>Premi «Nuovo raccolto» per inserire il primo.</p>
+    </section>
+
+    <div id="content" hidden>
+      <div class="toolbar">
+        <label class="select">
+          <span class="sr-only">Raccolto da visualizzare</span>
+          <select id="view"></select>
+        </label>
+        <span class="sub" id="view-sub"></span>
+      </div>
+
+      <div class="stats" id="stats"></div>
+      <div class="charts" id="charts"></div>
+
+      <h2 class="section-title">Registro</h2>
+      <div id="register"></div>
+    </div>
+  </main>
+
+  <dialog class="modal form-modal" id="form-modal" aria-labelledby="form-title">
+    <form id="form" novalidate>
+      <div class="modal-head">
+        <div>
+          <h2 id="form-title">Nuovo raccolto</h2>
+          <p class="sub">Resa e litri si calcolano a vicenda</p>
+        </div>
+        <button class="icon-btn" type="button" id="form-close" aria-label="Chiudi"></button>
+      </div>
+
+      <div class="fields">
+        <label class="field">
+          <span>Anno</span>
+          <input name="year" type="number" inputmode="numeric" min="1950" max="2100" required>
+        </label>
+        <label class="field">
+          <span>Peso olive</span>
+          <span class="input-unit"><input name="kg" type="text" inputmode="decimal" placeholder="0" required><i>kg</i></span>
+        </label>
+        <label class="field">
+          <span>Costo</span>
+          <span class="input-unit"><input name="cost" type="text" inputmode="decimal" placeholder="0"><i>€</i></span>
+        </label>
+        <label class="field">
+          <span>Resa</span>
+          <span class="input-unit"><input name="yieldPct" type="text" inputmode="decimal" placeholder="0"><i>%</i></span>
+        </label>
+        <label class="field">
+          <span>Olio prodotto</span>
+          <span class="input-unit"><input name="liters" type="text" inputmode="decimal" placeholder="0"><i>L</i></span>
+        </label>
+        <div class="field note" id="density-note"></div>
+      </div>
+
+      <p class="form-error" id="form-error" hidden></p>
+
+      <div class="form-actions">
+        <button class="button ghost" type="button" id="form-cancel">Annulla</button>
+        <button class="button" type="submit" id="form-submit">Salva</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script src="/widgets/config.js"></script>
+  <script src="/widgets/common.js"></script>
+  <script src="/widgets/charts.js"></script>
+  <script src="/widgets/raccolta-olive.js"></script>
+</body>
+</html>

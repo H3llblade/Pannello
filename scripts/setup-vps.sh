@@ -3,6 +3,7 @@
 # Variabili: APP_DIR (cartella del repo), RUN_USER (utente del servizio), EMAIL (opzionale, per Let's Encrypt)
 set -euo pipefail
 DOMAIN="${DOMAIN:-pannello.devicloud.me}"
+PORT="${PORT:-3087}"   # porta interna: la 3000 sulla VPS è già occupata da un'altra app
 export DEBIAN_FRONTEND=noninteractive
 
 echo "▸ Pacchetti di sistema"
@@ -24,7 +25,7 @@ After=network.target
 [Service]
 ExecStart=$(command -v node) $APP_DIR/server.js
 WorkingDirectory=$APP_DIR
-Environment=PORT=3000 HOST=127.0.0.1
+Environment=PORT=$PORT HOST=127.0.0.1
 Restart=always
 User=$RUN_USER
 ProtectSystem=strict
@@ -43,7 +44,7 @@ server {
     server_name $DOMAIN;
 
     location / {
-        proxy_pass http://127.0.0.1:3000;
+        proxy_pass http://127.0.0.1:$PORT;
         proxy_set_header Host \$host;
         proxy_set_header X-Real-IP \$remote_addr;
         proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;

@@ -69,7 +69,7 @@ function renderTopbar() {
     (p) => `<a href="${p.href}" class="${p.href === here ? 'active' : ''}">${icon(p.icon)}<span>${p.name}</span></a>`
   ).join('');
   document.getElementById('topbar').innerHTML = `
-    <a class="brand" href="/"><span class="brand-mark">${icon('home')}</span>Pannello</a>
+    <a class="brand" href="/"><img class="brand-logo" src="/widgets/icons/icon-192.png" alt="" width="34" height="34">Pannello</a>
     <nav>${nav}</nav>
     <button class="icon-btn" id="theme-toggle" type="button"></button>`;
 

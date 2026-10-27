@@ -7,6 +7,7 @@
 - `public/pages/` — **solo le pagine HTML**. `/` → `index.html`, `/<nome>` → `<nome>.html`, pagina mancante → `404.html`.
 - `public/widgets/` — **moduli del browser**: `style.css`, `theme.js` (nel head), `common.js` (icone, barra, tema, pulsante Home), `config.js`, `charts.js`, e uno script per pagina (`home.js`, `impostazioni.js`, `raccolta-olive.js`). Serviti su `/widgets/<file>`.
 - `api/` — moduli del server (`termostato.js`, `raccolti.js`); mai serviti al browser.
+- `public/widgets/icons/` — icona del sito (pulcino): favicon, apple-touch-icon, manifest; logo nella barra in alto.
 - `data/` — dati salvati sulla VPS (es. `raccolti.json`), fuori da git; `.env` per le credenziali, fuori da git.
 
 ## Pagine e stile

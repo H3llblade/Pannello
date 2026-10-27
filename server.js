@@ -89,6 +89,8 @@ const server = http.createServer((req, res) => {
   let rel;
   try { rel = decodeURIComponent(url.pathname); } catch { return send(res, 400, 'Bad request'); }
 
+  if (rel === '/favicon.ico') rel = '/widgets/icons/favicon-32.png';
+
   let file;
   if (rel.startsWith('/widgets/')) {
     // resta dentro WIDGETS_DIR (blocca path traversal)
